@@ -1,4 +1,5 @@
 import Service from '../service/Service';
+import StorageServiceVO from './vo/StorageServiceVO';
 import { ServiceState } from '../service/states/ServiceState';
 export default class StorageService extends Service {
     constructor(vo) {
@@ -8,7 +9,13 @@ export default class StorageService extends Service {
         this.storage = {};
         this.init();
     }
+    static get instance() {
+        if (!StorageService.instance)
+            StorageService._instance = new StorageService(new StorageServiceVO({}));
+        return StorageService.instance;
+    }
     // GET/SET
+    get isSupport() { return typeof (Storage) !== "undefined"; }
     get vo() { return this.sourceVO; }
     get timeout() { return this.vo.storeTimeout; }
     get now() { return Date.now(); }
@@ -17,7 +24,6 @@ export default class StorageService extends Service {
     // INIT
     init() {
         super.init();
-        StorageService.instance = this;
         this.initStorage();
     }
     // STORAGE
@@ -34,6 +40,7 @@ export default class StorageService extends Service {
     read(key, defaults = null) {
         return this.storage[key] || defaults;
     }
+    // SAVE
     save(immediatly = false) {
         if (immediatly)
             this.clearSaveTimeout();
@@ -46,6 +53,7 @@ export default class StorageService extends Service {
     saving() {
         this.localStorageBranch = this.storage;
     }
+    // TIMEOUT
     clearSaveTimeout() {
         this.timeoutLast = this.now;
         clearTimeout(this.timeoutIndentifier);
@@ -69,6 +77,15 @@ export default class StorageService extends Service {
             return false;
         }
         return true;
+    }
+    //
+    // INSTANCE METHODS
+    //
+    static store(key, value, immediatly = false) {
+        StorageService.instance.store(key, value, immediatly);
+    }
+    static read(key, defaults = null) {
+        StorageService.instance.store(key, defaults);
     }
 }
 //# sourceMappingURL=StorageService.js.map

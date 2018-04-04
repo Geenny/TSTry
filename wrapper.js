@@ -1,6 +1,9 @@
 import Main from "./bin/Main";
+
+//var iframe = document.body.create
+
 //var frame = 
-var main = new Main( document.body );
+var main = new Main( frame/*document.body*/ );
 main.init();
 
 // document.body.onfocus = function( event ) {

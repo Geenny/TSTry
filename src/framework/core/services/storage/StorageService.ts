@@ -23,6 +23,8 @@ export default class StorageService extends Service {
 
     // GET/SET
 
+    public get isSupport(): boolean { return typeof( Storage ) !== "undefined"; }
+
     public get vo(): StorageServiceVO { return this.sourceVO as StorageServiceVO; }
     public get timeout(): number { return this.vo.storeTimeout; }
     public get now(): number { return Date.now(); }

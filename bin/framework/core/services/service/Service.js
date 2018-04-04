@@ -19,6 +19,7 @@ export default class Service extends EventDispathcer {
     get enable() { return this._enable; }
     set enable(value) { this._enable = value; }
     get working() { return this.state == ServiceState.WORKING; }
+    get isSupport() { return true; }
     // INIT 
     init() {
         this.activity(true);

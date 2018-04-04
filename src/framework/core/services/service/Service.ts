@@ -34,6 +34,7 @@ export default class Service extends EventDispathcer implements IService, IInfo,
     public set enable( value: boolean ) { this._enable = value; }
 
     public get working(): boolean { return this.state == ServiceState.WORKING }
+    public get isSupport(): boolean { return true; }
 
     // INIT 
 

@@ -13,8 +13,9 @@ export default class ResizeController extends Controller {
     get height() { return this.sourceResizeEventVO.height; }
     // 
     init() {
-        this.initListeners();
         ResizeController.instance = this;
+        this.initListeners();
+        this.resize();
         this.target = this.application;
         this.inited = true;
     }
@@ -37,10 +38,14 @@ export default class ResizeController extends Controller {
     }
     // HANDLERS
     onResize(event) {
-        //Log.log( event );
         let controller = ResizeController.instance;
-        controller.sourceResizeEventVO = controller.getSourceResizeEventVO(event);
-        controller.dispatch(new ApplicationEvent(ApplicationEvent.APPLICATION_RESIZE, controller.sourceResizeEventVO));
+        controller.resize(event);
+    }
+    resize(event = null) {
+        this.sourceResizeEventVO = this.getSourceResizeEventVO(event);
+        this.sourceResizeEventVO.width = this.container.clientWidth;
+        this.sourceResizeEventVO.height = this.container.clientHeight;
+        this.dispatch(new ApplicationEvent(ApplicationEvent.APPLICATION_RESIZE, this.sourceResizeEventVO));
     }
     // DISPATCH
     dispatch(event) {
@@ -49,8 +54,11 @@ export default class ResizeController extends Controller {
         this.target.dispatchEvent(event);
     }
     // SOURCE VO
-    getSourceResizeEventVO(event) {
-        return new SourceResizeEventVO(event);
+    getSourceResizeEventVO(event = null) {
+        let vo = new SourceResizeEventVO(event);
+        vo.width = this.container.clientWidth;
+        vo.height = this.container.clientHeight;
+        return vo;
     }
 }
 //# sourceMappingURL=ResizeController.js.map

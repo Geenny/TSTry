@@ -28,8 +28,9 @@ export default class ResizeController extends Controller {
     // 
 
     public init() {
-        this.initListeners();
         ResizeController.instance = this;
+        this.initListeners();
+        this.resize();
         this.target = this.application;
         this.inited = true;
     }
@@ -54,10 +55,14 @@ export default class ResizeController extends Controller {
     // HANDLERS
 
     private onResize( event: any ) {
-        //Log.log( event );
         let controller: ResizeController = ResizeController.instance;
-        controller.sourceResizeEventVO = controller.getSourceResizeEventVO( event );
-        controller.dispatch( new ApplicationEvent( ApplicationEvent.APPLICATION_RESIZE, controller.sourceResizeEventVO ) );
+        controller.resize( event );
+    }
+    public resize( event: any = null) {
+        this.sourceResizeEventVO = this.getSourceResizeEventVO( event );
+        this.sourceResizeEventVO.width = this.container.clientWidth;
+        this.sourceResizeEventVO.height = this.container.clientHeight;
+        this.dispatch( new ApplicationEvent( ApplicationEvent.APPLICATION_RESIZE, this.sourceResizeEventVO ) );
     }
 
     // DISPATCH
@@ -69,8 +74,11 @@ export default class ResizeController extends Controller {
 
     // SOURCE VO
 
-    public getSourceResizeEventVO( event: any ): SourceResizeEventVO {
-        return new SourceResizeEventVO( event );
+    public getSourceResizeEventVO( event: any = null): SourceResizeEventVO {
+        let vo = new SourceResizeEventVO( event );
+        vo.width = this.container.clientWidth;
+        vo.height = this.container.clientHeight;
+        return vo;
     }
 
 

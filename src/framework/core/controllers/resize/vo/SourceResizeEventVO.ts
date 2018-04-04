@@ -14,13 +14,11 @@ export default class SourceResizeEventVO implements IVO {
 
     public parse( event ) {
 
-        if ( !event ) return;
+        if ( !event ) event = {};
         this.event = event;
 
-        this.type = event.type;
-        this.isTrusted = event.isTrusted;
-        this.width = event.srcElement.innerWidth;
-        this.height = event.srcElement.innerHeight;
+        this.type = event.type || this.type;
+        this.isTrusted = event.isTrusted || this.isTrusted;
 
     }
 
