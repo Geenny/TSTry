@@ -1,0 +1,5 @@
+interface IEnable {
+
+    enable: boolean;
+    
+}

@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        //"module": "system",
+        "target": "es6",
+        "sourceMap": true,
+        "outDir": "bin"//,
+        //"outFile": "index.js"
+    }
+}

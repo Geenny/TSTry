@@ -1,0 +1,19 @@
+{
+  "name": "tstry",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/wrapper.js",
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "createjs": "^1.0.1",
+    "createjs-module": "^0.8.3",
+    "three": "^0.91.0",
+    "webpack": "^4.4.1",
+    "webpack-cli": "^2.0.13",
+    "webpack-dev-server": "^3.1.1"
+  },
+  "scripts": {
+    "build": "webpack-dev-server --mode development --host localhost"
+  }
+}
