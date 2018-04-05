@@ -4,6 +4,9 @@ import Log from './framework/core/utils/Log';
 import ApplicationEvent from './framework/application/events/ApplicationEvent';
 import StorageService from './framework/core/services/storage/StorageService';
 import StorageServiceVO from './framework/core/services/storage/vo/StorageServiceVO';
+import AudioService from './framework/core/services/audio/AudioService';
+import AudioServiceVO from './framework/core/services/audio/vo/AudioServiceVO';
+import AudioWrapper from './framework/core/services/audio/AudioWrapper';
 
 export default class Main extends Application {
 
@@ -18,6 +21,13 @@ export default class Main extends Application {
         this.addEventListener( ApplicationEvent.APPLICATION_RESIZE, (e) => { Log.log(e); } );
         this.addEventListener( ApplicationEvent.APPLICATION_FOCUS, (e) => { Log.log(e); } );
         this.addEventListener( ApplicationEvent.APPLICATION_BLUR, (e) => { Log.log(e); } );
+
+        let as: AudioService = new AudioService( new AudioServiceVO( {} ) );
+        let aw: AudioWrapper = as.play( "abc.mp3" );
+
+        setInterval( () => {
+            console.log( aw.time );
+        }, 666 );
 
     }
 

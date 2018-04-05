@@ -5,12 +5,10 @@ export default class SourceResizeEventVO {
     }
     parse(event) {
         if (!event)
-            return;
+            event = {};
         this.event = event;
-        this.type = event.type;
-        this.isTrusted = event.isTrusted;
-        this.width = event.srcElement.innerWidth;
-        this.height = event.srcElement.innerHeight;
+        this.type = event.type || this.type;
+        this.isTrusted = event.isTrusted || this.isTrusted;
     }
 }
 //# sourceMappingURL=SourceResizeEventVO.js.map
