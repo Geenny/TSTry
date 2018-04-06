@@ -1,3 +1,4 @@
+import AudioServiceChannel from '../AudioServiceChannel';
 
 export default class AudioWrapperVO implements IVO {
 
@@ -6,6 +7,8 @@ export default class AudioWrapperVO implements IVO {
     public loop: boolean = false;
     public playtimes: number = 1;
     public src: string = null;
+    public channel: AudioServiceChannel = null;
+    public autodestroy: boolean = true;
 
     public data: any = {};
 
@@ -23,6 +26,8 @@ export default class AudioWrapperVO implements IVO {
         this.loop = this.data.loop;
         this.playtimes = this.data.playtimes || this.playtimes;
         this.src = this.data.src || this.src;
+        this.channel = this.data.channel || this.channel;
+        this.autodestroy = this.data.autodestroy || this.autodestroy;
 
     }
 

@@ -1,15 +1,18 @@
 import AudioWrapper from "./AudioWrapper";
+import EventDispathcer from '../../events/EventDispathcer';
+import AudioChannelEvent from './events/AudioChannelEvent';
 
-export default class AudioServiceChannel {
+export default class AudioServiceChannel extends EventDispathcer {
 
     private _name: string = "audioChannelName";
     private _volume: number = 1;
     private _mute: boolean;
+    private _globalMute: boolean;
 
     protected audioWrapperList: AudioWrapper[] = [];
-    protected globalMute: boolean = false;
 
     constructor( name: string, volume: number = 1 ) {
+        super();
         this._name = name;
         this.volume = volume;
     }
@@ -23,16 +26,19 @@ export default class AudioServiceChannel {
         if ( value < 0 ) value = 0;
         if ( value > 1 ) value = 1;
         this._volume = value;
-        this.volumeChange();
+        this.dispatchEvent( new AudioChannelEvent( AudioChannelEvent.VOLUME, this ) );
     }
 
-    public get mute(): boolean { return this._mute || this.globalMute; }
-    public set mute( value: boolean ) { this._mute = value; }
+    public get mute(): boolean { return this._mute || this._globalMute; }
+    public set mute( value: boolean ) {
+        this._mute = value;
+        this.dispatchEvent( new AudioChannelEvent( AudioChannelEvent.MUTE, this ) );
+    }
 
     // HANDLERS
 
-    public globalMuteSet( value: boolean = false ) {
-        this.globalMute = value;
+    public globalMuteSet( globalMute: boolean = false ) {
+        this._globalMute = globalMute;
     }
 
     // SERVICE

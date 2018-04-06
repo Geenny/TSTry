@@ -7,6 +7,7 @@ import StorageServiceVO from './framework/core/services/storage/vo/StorageServic
 import AudioService from './framework/core/services/audio/AudioService';
 import AudioServiceVO from './framework/core/services/audio/vo/AudioServiceVO';
 import AudioWrapper from './framework/core/services/audio/AudioWrapper';
+import AudioEvent from './framework/core/services/audio/events/AudioEvent';
 
 export default class Main extends Application {
 
@@ -25,9 +26,16 @@ export default class Main extends Application {
         let as: AudioService = new AudioService( new AudioServiceVO( {} ) );
         let aw: AudioWrapper = as.play( "abc.mp3" );
 
-        setInterval( () => {
-            console.log( aw.time );
-        }, 666 );
+        aw.addEventListener( AudioEvent.PLAY, ( event ) => {
+            Log.log( event );
+        });
+        aw.addEventListener( AudioEvent.PAUSE, ( event ) => {
+            Log.log( event );
+        });
+        aw.addEventListener( AudioEvent.PROGRESS, ( event ) => {
+            Log.log( event );
+            Log.log( aw.time );
+        });
 
     }
 

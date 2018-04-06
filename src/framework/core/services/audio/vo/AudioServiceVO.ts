@@ -1,7 +1,10 @@
 export default class AudioServiceVO implements IVO {
 
-    public volume: number = 1;          // 0-1, общее значение звукового уровня
-    public channels: string[] = [];     // Списки каналов
+    public volume: number = 1;                  // 0-1, общее значение звукового уровня
+    public channels: string[] = [];             // Списки каналов
+
+    public progressCustom: boolean = true;
+    public progressTimeout: number = 1000;      // ms
 
     public data: any = {};
 
