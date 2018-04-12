@@ -22,9 +22,6 @@ export default class AudioService extends Service {
 
     // LOCAL VARS
 
-    private _mute: boolean = false;
-    private _volume: number = 1;
-
     protected _channels: AudioServiceChannel[] = [];
     protected _audioWrapperList: AudioWrapper[] = [];
 
@@ -38,20 +35,20 @@ export default class AudioService extends Service {
     public get vo(): AudioServiceVO { return this.sourceVO as AudioServiceVO; }
     public get channels(): AudioServiceChannel[] { return this._channels; }
 
-    public get volume(): number { return this._volume; }
+    public get volume(): number { return this.vo.volume; }
     public set volume( value: number ) {
         if ( value < 0 ) value = 0;
         if ( value > 1 ) value = 1;
 
-        if ( this._volume == value ) return;
-        this._volume = value;
+        if ( this.vo.volume == value ) return;
+        this.vo.volume = value;
         this.volumeChange();
     }
 
-    public get mute(): boolean { return this._mute; }
+    public get mute(): boolean { return this.vo.mute; }
     public set mute( value: boolean ) {
-        if ( this._mute == value ) return;
-        this._mute = value;
+        if ( this.vo.mute == value ) return;
+        this.vo.mute = value;
         this.channelChangeMute();
     }
 
@@ -75,9 +72,14 @@ export default class AudioService extends Service {
 
     public channelAddByName( name: string, volume: number = 1 ): AudioServiceChannel {
         
-        let channel: AudioServiceChannel = this.channelGetByName( name );
-        if ( !channel ) channel = this.channelCreate( name, volume );
-        this._channels.push( channel );
+        let channel: AudioServiceChannel;
+        if ( !name ) return null;
+
+        channel = this.channelGetByName( name );
+        if ( !channel ) {
+            channel = this.channelCreate( name, volume );
+            this._channels.push( channel );
+        }
         return channel;
 
     }
@@ -123,11 +125,10 @@ export default class AudioService extends Service {
 
     private volumeChange() {
         this.channelVolumeChange();
-        //this.audioWrapperVolumeChange();
     }
     private channelVolumeChange() {
         for ( let channel of this.channels ) {
-            channel.volume = channel.volume * this._volume;
+            channel.volume = channel.volume * this.vo.volume;
         }
     }
     private audioWrapperVolumeChange() {
@@ -172,7 +173,7 @@ export default class AudioService extends Service {
 
     private isAudioWrapperActive(): boolean {
         for ( let audioWrapper of this._audioWrapperList) {
-            if ( audioWrapper.isActive ) return true;
+            if ( audioWrapper.playing ) return true;
         }
         return false;
     }
@@ -187,12 +188,12 @@ export default class AudioService extends Service {
 
     private audioWrapperInterval() {
         for ( let audioWrapper of this._audioWrapperList) {
-            if ( !audioWrapper.isActive ) continue;
+            if ( !audioWrapper.playing ) continue;
             audioWrapper.update();
         }
     }
 
-    // Создать глвый экземпляр @AudioWrapperVO
+    // Создать главый экземпляр @AudioWrapperVO
     private audioWrapperVOGetNew( 
         soundName: string,
         channel: AudioServiceChannel,
@@ -225,14 +226,23 @@ export default class AudioService extends Service {
      * @param soundName Имя звука, ссылка звука
      * @param channelName Имя канала. Если это значение не задано будет взят первый канал
      */
-    public play( soundName: string, channelName: string = null, volume: number = -1, pan: number = 0, loop: boolean = false, playtimes: number = -1 ): AudioWrapper {
+    public play( input: string | AudioWrapperVO ): AudioWrapper {
 
-        if ( !soundName ) return null;
+        if ( !input ) return null;
 
-        let channel: AudioServiceChannel =  this.channelGetByNameOrCreate( channelName );
-        let vo: AudioWrapperVO = this.audioWrapperVOGetNew( soundName, channel, this.volume * volume, pan, loop, playtimes );
-        let audio: AudioWrapper = this.audioWrapperGet( vo );
+        let channelName: string, channel: AudioServiceChannel, vo: AudioWrapperVO, audio: AudioWrapper;
 
+        if ( input instanceof AudioWrapperVO ) {
+            vo = input;
+            if ( !vo.channel ) vo.channel = this.channelGetByNameOrCreate( null );
+        }else if ( typeof input == "string" ) {
+            channel =  this.channelGetByNameOrCreate( null );
+            vo = this.audioWrapperVOGetNew( input, channel, this.volume );
+        }
+
+        if ( !vo ) return;
+
+        audio = this.audioWrapperGet( vo );
         audio.play();
 
         this.audioWrappersListenerUpdate();

@@ -1,6 +1,7 @@
 import Service from '../service/Service';
 import StorageServiceVO from './vo/StorageServiceVO';
 import { ServiceState } from '../service/states/ServiceState';
+import Time from '../../utils/Time';
 export default class StorageService extends Service {
     constructor(vo) {
         super(vo);
@@ -18,7 +19,7 @@ export default class StorageService extends Service {
     get isSupport() { return typeof (Storage) !== "undefined"; }
     get vo() { return this.sourceVO; }
     get timeout() { return this.vo.storeTimeout; }
-    get now() { return Date.now(); }
+    get now() { return Time.now(); }
     get localStorageBranch() { return JSON.parse(localStorage[this.vo.objectName]); }
     set localStorageBranch(value) { localStorage[this.vo.objectName] = JSON.stringify(value); }
     // INIT

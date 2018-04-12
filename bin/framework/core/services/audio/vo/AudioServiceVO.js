@@ -2,6 +2,9 @@ export default class AudioServiceVO {
     constructor(data) {
         this.volume = 1; // 0-1, общее значение звукового уровня
         this.channels = []; // Списки каналов
+        this.mute = false;
+        this.progressCustom = true;
+        this.progressTimeout = 1000; // ms
         this.data = {};
         this.parse(data);
     }

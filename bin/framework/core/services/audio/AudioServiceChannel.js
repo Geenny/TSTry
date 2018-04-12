@@ -1,9 +1,11 @@
-export default class AudioServiceChannel {
+import EventDispathcer from '../../events/EventDispathcer';
+import AudioChannelEvent from './events/AudioChannelEvent';
+export default class AudioServiceChannel extends EventDispathcer {
     constructor(name, volume = 1) {
+        super();
         this._name = "audioChannelName";
         this._volume = 1;
         this.audioWrapperList = [];
-        this.globalMute = false;
         this._name = name;
         this.volume = volume;
     }
@@ -16,13 +18,16 @@ export default class AudioServiceChannel {
         if (value > 1)
             value = 1;
         this._volume = value;
-        this.volumeChange();
+        this.dispatchEvent(new AudioChannelEvent(AudioChannelEvent.VOLUME, this));
     }
-    get mute() { return this._mute || this.globalMute; }
-    set mute(value) { this._mute = value; }
+    get mute() { return this._mute || this._globalMute; }
+    set mute(value) {
+        this._mute = value;
+        this.dispatchEvent(new AudioChannelEvent(AudioChannelEvent.MUTE, this));
+    }
     // HANDLERS
-    globalMuteSet(value = false) {
-        this.globalMute = value;
+    globalMuteSet(globalMute = false) {
+        this._globalMute = globalMute;
     }
     // SERVICE
     /**

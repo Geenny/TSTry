@@ -9,6 +9,11 @@ export default class AudioWrapperVO implements IVO {
     public src: string = null;
     public channel: AudioServiceChannel = null;
     public autodestroy: boolean = true;
+    public fadetime: number = 500;              // Значение времени в течении которого будет выключен/включен звук через плавное затухание
+    public pauseback: number = 1000;            // Значение времени возврата @audio.currentTime с при приостановке ( pause )
+
+    public progressMethod: Function = null;
+    public endedMethod: Function = null;
 
     public data: any = {};
 
@@ -28,6 +33,11 @@ export default class AudioWrapperVO implements IVO {
         this.src = this.data.src || this.src;
         this.channel = this.data.channel || this.channel;
         this.autodestroy = this.data.autodestroy || this.autodestroy;
+        this.fadetime = this.data.fadetime || this.fadetime;
+        this.pauseback = this.data.pauseback || this.pauseback;
+
+        this.progressMethod = this.data.progressMethod || this.progressMethod;
+        this.endedMethod = this.data.endedMethod || this.endedMethod;
 
     }
 

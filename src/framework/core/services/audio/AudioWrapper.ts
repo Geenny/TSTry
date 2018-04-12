@@ -3,12 +3,14 @@ import AudioServiceChannel from './AudioServiceChannel';
 import EventDispathcer from '../../events/EventDispathcer';
 import Log from '../../utils/Log';
 import AudioEvent from './events/AudioEvent';
+import { AudioWrapperState } from './states/AudioWrapperState';
+import Time from '../../utils/Time';
 
-export default class AudioWrapper extends EventDispathcer {
+export default class AudioWrapper extends EventDispathcer implements IState {
 
     private _globalMute: boolean = false;
     private _audio: HTMLAudioElement;
-    private _playing: boolean = false;
+    private _state: number = AudioWrapperState.WAIT;
 
     public name: string  = "";
     public link: string = "";
@@ -17,8 +19,7 @@ export default class AudioWrapper extends EventDispathcer {
 
     constructor( vo: AudioWrapperVO ) {
         super();
-        this.initVO( vo );
-        this.init();
+        this.init( vo );
     }
 
     // GET/SET
@@ -53,16 +54,26 @@ export default class AudioWrapper extends EventDispathcer {
     public set mute( value: boolean ) { this.audio.muted = value; }
 
     public get src(): string { return ( this.audio ) ? this.audio.src : ""; }
+    public set src( value:string ) {
+        if ( !value ) return;
+        this.vo.src = value;
+        this.initAudio();
+    }
+
     public get duration(): number { return this.audio.duration; }
     public get progress(): number { return this.time / this.duration; }
     public get channel(): AudioServiceChannel { return this.vo.channel; }
-    public get playing(): boolean { return this._playing; }
+    public get playing(): boolean { return !this.audio.paused; }
 
-    public get isActive(): boolean { return this.playing; }
+    public get state(): number { return this._state; }
 
     // INIT
 
-    protected init() {
+    protected init( vo: AudioWrapperVO ) {
+
+        this.initVO( vo );
+        this.initAudio();
+
         let audio = this.audio;
 
         audio.addEventListener( "loadedmetadata", ( event ) => { this.onLoadedMetaData() } );
@@ -79,6 +90,12 @@ export default class AudioWrapper extends EventDispathcer {
     protected initVO( vo: AudioWrapperVO ) {
         if ( !vo ) vo = new AudioWrapperVO();
         this.vo = vo;
+    }
+
+    protected initAudio() {
+        this.stop( true );
+        this.srcChange();
+        this.volumeChange();
     }
 
     // HANDLERS
@@ -107,7 +124,7 @@ export default class AudioWrapper extends EventDispathcer {
     }
     private onEnded() {
         this.dispatchEvent( new AudioEvent( AudioEvent.ENDED, this ) );
-        this.checkPlayTimes();
+        this.audioEnded();
     }
 
     //
@@ -126,6 +143,7 @@ export default class AudioWrapper extends EventDispathcer {
         this.volume = this.channel.volume * this.volume;
     }
     private volumeChange() {
+        if ( this.audio.volume == this.vo.volume ) return;
         this.audio.volume = this.volume;
     }
 
@@ -138,37 +156,171 @@ export default class AudioWrapper extends EventDispathcer {
         this.mute = this._globalMute || this.channel.mute || this.audio.muted;
     }
 
+    // SRC
+
+    public srcChange() {
+        if ( this.audio.src == this.vo.src ) return;
+        this.audio.src = this.vo.src;
+    }
+
+    // STATE
+
+    protected setState( state: number ) {
+        this._state = state;
+    }
+
+    // FADER
+
+    protected fadeStoppingInterval: number = 0;
+    protected fadeStoppingTime: number = 0;
+    protected pauseTime: number = 0;
+
+    protected fadingKillTimeout() {
+        clearInterval( this.fadeStoppingInterval );
+        this.fadeStoppingInterval = 0;
+    }
+    protected fadingCreateInterval() {
+        if ( this.fadeStoppingInterval ) return;
+        this.fadeStoppingInterval = setInterval( () => { this.fadingTick(); }, 20 );
+    }
+    private fadingTick() {
+
+        let fadingComplete: boolean = false;
+        let percent: number = ( Time.now() - this.fadeStoppingTime ) / this.vo.fadetime;
+        if ( percent > 1 ) percent = 1;
+
+        switch( this.state ) {
+            case AudioWrapperState.STOPPING:
+            case AudioWrapperState.PAUSING:
+                this.audioSteppingVolume( 1 - percent );
+                break;
+            case AudioWrapperState.PLAY:
+            case AudioWrapperState.PLAYING:
+                this.audioSteppingVolume( percent );
+                break;
+        }
+
+        if ( percent == 1 ) {
+            this.fadingStop();
+        }
+
+    }
+
+    protected fadingStart( state: number = AudioWrapperState.NONE ) {
+
+        let fadeable: boolean = this.vo.fadetime > 0;
+        let playable: boolean = this.state == AudioWrapperState.PLAYING || this.state == AudioWrapperState.PLAY;
+        let stopable: boolean = this.state == AudioWrapperState.STOP ||
+                                this.state == AudioWrapperState.STOPPING ||
+                                this.state == AudioWrapperState.PAUSE ||
+                                this.state == AudioWrapperState.PAUSING;
+
+        
+        this.setState( state );
+        
+        if ( !playable && !stopable ) return;
+
+        if ( fadeable ) {
+            this.fadeStoppingTime = Time.now();
+            this.fadingCreateInterval();
+        }else{
+            this.fadingStop();
+        }
+    }
+
+    protected fadingStop() {
+        this.fadingCreateInterval();
+
+        switch( this.state ) {
+            case AudioWrapperState.STOPPING:
+                this.setState( AudioWrapperState.STOP );
+                this.audioSteppingVolume( 0 );
+                this.audioStop();
+                break;
+            case AudioWrapperState.PAUSING:
+                this.setState( AudioWrapperState.PAUSE );
+                this.audioSteppingVolume( 0 );
+                this.audioPause();
+                break;
+            case AudioWrapperState.PLAY:
+            case AudioWrapperState.PLAYING:
+                this.setState( AudioWrapperState.PLAY );
+                this.audioSteppingVolume( 1 );
+                break;
+        }
+    }
+
+    // AUDIO
+
+    protected audioSetPauseTime() {
+        this.pauseTime = this.audio.currentTime - ( this.vo.pauseback * 0.001 );
+        if ( this.pauseTime < 0 ) this.pauseTime = 0;
+        this.audio.currentTime = this.pauseTime;
+    }
+    protected audioResetPauseTime() {
+        this.pauseTime = 0;
+        this.audio.currentTime = this.pauseTime;
+    }
+    protected audioPlay() {
+        this.audio.play();
+    }
+    protected audioPause() {
+        this.audioSetPauseTime();
+        this.audio.pause();
+    }
+    protected audioStop() {
+        this.audioPause();
+        this.audioResetPauseTime();
+        this.setState( AudioWrapperState.WAIT );
+    }
+    protected audioSteppingVolume( volume: number = 1 ) {
+        this.audio.volume = this.volume * volume;
+    }
+    protected audioEnded() {
+        if ( this.state != AudioWrapperState.PLAY ) return;
+        this.stop( true );
+        if ( this.vo.loop ) {
+            this.dispatchEvent( new AudioEvent( AudioEvent.LOOP, this ) );
+            this.play();
+        }else if( this.vo.playtimes > 0 ) {
+            this.vo.playtimes --;
+            this.dispatchEvent( new AudioEvent( AudioEvent.LOOP, this ) );
+            this.play();
+        }
+    }
+
     // SERVICE
 
-    private checkPlayTimes() {
-        if ( this.vo.playtimes < 0 ) return;
-        this.vo.playtimes --;
-        if ( this.vo.playtimes > 0 )
-            this.play();
-    }
+    
 
     // IFACES
 
     public play() {
 
-        if ( this._playing ) {
-            this.stop();
-        }
+        if ( this.state == AudioWrapperState.PLAY || this.state == AudioWrapperState.PLAYING ) return;
 
-        this.audio.src = this.vo.src;
-        this.audio.play();
-        this._playing = !this.audio.paused;
+        this.volumeChange();
+        this.audioPlay();
+        this.fadingStart( AudioWrapperState.PLAY );
     }
 
-    public stop() {
-        this.pause();
-        this.time = 0;
+    public stop( force: boolean = false ) {
+        if ( force ) {
+            this.fadingStop();
+            this.audioStop();
+        }else{
+            this.fadingStart( AudioWrapperState.STOPPING );
+        }
     }
 
     public pause() {
-        if ( this.audio.paused ) return;
-        this.audio.pause();
-        this._playing = !this.audio.paused;
+        if ( this.audio.paused ) {
+            this.volumeChange();
+            this.audioPlay();
+            this.fadingStart( AudioWrapperState.PLAY );
+        }else{
+            this.fadingStart( AudioWrapperState.PAUSING );
+        }
     }
 
 }

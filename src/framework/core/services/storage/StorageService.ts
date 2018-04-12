@@ -1,6 +1,7 @@
 import Service from '../service/Service';
 import StorageServiceVO from './vo/StorageServiceVO';
 import { ServiceState } from '../service/states/ServiceState';
+import Time from '../../utils/Time';
 
 export default class StorageService extends Service {
 
@@ -27,7 +28,7 @@ export default class StorageService extends Service {
 
     public get vo(): StorageServiceVO { return this.sourceVO as StorageServiceVO; }
     public get timeout(): number { return this.vo.storeTimeout; }
-    public get now(): number { return Date.now(); }
+    public get now(): number { return Time.now(); }
 
     protected get localStorageBranch(): any { return JSON.parse( localStorage[ this.vo.objectName ] ); }
     protected set localStorageBranch( value: any) { localStorage[ this.vo.objectName ] = JSON.stringify( value ); }

@@ -13,6 +13,7 @@ export default class AudioEvent extends Event {
     public static get DURATION_CHANGE(): string { return "audioDurationChange"; }
     public static get TIME_CHANGE(): string { return "audioTimeChange"; }               // Изменение позиции проигрывания
     public static get ENDED(): string { return "audioEnded"; }
+    public static get LOOP(): string { return "audioLoop"; }
 
     public audioWrapper: AudioWrapper;
 
