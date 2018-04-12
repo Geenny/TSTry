@@ -28,6 +28,9 @@ export default class Main extends Application {
         this.addEventListener(ApplicationEvent.APPLICATION_RESIZE, (e) => { Log.log(e); });
         this.addEventListener(ApplicationEvent.APPLICATION_FOCUS, (e) => { Log.log(e); });
         this.addEventListener(ApplicationEvent.APPLICATION_BLUR, (e) => { Log.log(e); });
+        this.addEventListener(ApplicationEvent.APPLICATION_DEVICE_MOTION, (e) => { Log.log(e); });
+        this.addEventListener(ApplicationEvent.APPLICATION_DEVICE_ORIENTATION, (e) => { Log.log(e); });
+        this.addEventListener(ApplicationEvent.APPLICATION_DEVICE_ORIENTATION_CHANGE, (e) => { Log.log(e); });
         let as = new AudioService(new AudioServiceVO({}));
         let awvo = new AudioWrapperVO({
             src: "homely_loop.mp3",
@@ -45,21 +48,24 @@ export default class Main extends Application {
             Log.log(event);
         });
         // Create WebSocket connection.
-        const socket = new WebSocket('wss://www.facebook.com:80');
+        // const socket = new WebSocket('wss://www.facebook.com:80');
         // Connection opened
-        socket.addEventListener('open', function (event) {
-            socket.send('Hello Server!');
-        });
-        socket.addEventListener('error', function (event) {
-            socket.send('error');
-        });
-        socket.addEventListener('message', function (event) {
-            console.log('Message from server ', event.data);
-        });
-        socket.addEventListener('close', function (event) {
-            console.log('close ', event);
-        });
+        // socket.addEventListener('open', function (event) {
+        //     socket.send('Hello Server!');
+        // });
+        // socket.addEventListener('error', function (event) {
+        //     socket.send('error');
+        // });
+        // socket.addEventListener('message', function (event) {
+        //     console.log('Message from server ', event.data);
+        // });
+        // socket.addEventListener('close', function (event) {
+        //     console.log('close ', event);
+        // });
         //let tcp: TCPSocket = new TCPSocket
+        // window.addEventListener("deviceorientation", (event) => {
+        //     Log.log(event);
+        // });
     }
 }
 //# sourceMappingURL=Main.js.map

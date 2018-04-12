@@ -4,6 +4,7 @@ import Controller from './Controller';
 import KeyboardController from './keyboard/KeyboardController';
 import ResizeController from './resize/ResizeController';
 import FocusController from './focus/FocusController';
+import OrientationController from './orientation/OrientationController';
 
 export default class Controllers extends EventDispathcer implements IInit, IEnable {
 
@@ -17,7 +18,8 @@ export default class Controllers extends EventDispathcer implements IInit, IEnab
     public controllerList: any[] = [
         KeyboardController,
         ResizeController,
-        FocusController
+        FocusController,
+        OrientationController
     ]
 
     constructor( application: Application, options: any = null ) {

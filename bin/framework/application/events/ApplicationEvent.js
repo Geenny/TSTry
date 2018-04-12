@@ -9,6 +9,9 @@ export default class ApplicationEvent extends Event {
     static get APPLICATION_SCREEN_NORMAL() { return "applicationScreenNormal"; }
     static get APPLICATION_SERVICE_STORAGE_STORE() { return "applicationServiceStorageStore"; }
     static get APPLICATION_SERVICE_STORAGE_READ() { return "applicationServiceStorageRead"; }
+    static get APPLICATION_DEVICE_ORIENTATION_CHANGE() { return "applicationDeviceOrientationChange"; }
+    static get APPLICATION_DEVICE_ORIENTATION() { return "applicationDeviceOrientation"; }
+    static get APPLICATION_DEVICE_MOTION() { return "applicationDeviceMotion"; }
     constructor(type, data) {
         super(type, false, false);
         this.data = data;

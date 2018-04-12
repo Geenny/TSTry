@@ -81,7 +81,4 @@ export default class ResizeController extends Controller {
         return vo;
     }
 
-
-
-
 }

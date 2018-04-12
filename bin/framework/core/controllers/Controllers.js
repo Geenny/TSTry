@@ -2,6 +2,7 @@ import EventDispathcer from '../events/EventDispathcer';
 import KeyboardController from './keyboard/KeyboardController';
 import ResizeController from './resize/ResizeController';
 import FocusController from './focus/FocusController';
+import OrientationController from './orientation/OrientationController';
 export default class Controllers extends EventDispathcer {
     constructor(application, options = null) {
         super();
@@ -9,7 +10,8 @@ export default class Controllers extends EventDispathcer {
         this.controllerList = [
             KeyboardController,
             ResizeController,
-            FocusController
+            FocusController,
+            OrientationController
         ];
         this.application = application;
         this.options = options;

@@ -17,6 +17,10 @@ export default class ApplicationEvent extends Event {
     public static get APPLICATION_SERVICE_STORAGE_STORE(): string { return "applicationServiceStorageStore"; }
     public static get APPLICATION_SERVICE_STORAGE_READ(): string { return "applicationServiceStorageRead"; }
 
+    public static get APPLICATION_DEVICE_ORIENTATION_CHANGE(): string { return "applicationDeviceOrientationChange"; }
+    public static get APPLICATION_DEVICE_ORIENTATION(): string { return "applicationDeviceOrientation"; }
+    public static get APPLICATION_DEVICE_MOTION(): string { return "applicationDeviceMotion"; }
+
     public data: IVO;
 
     constructor( type: string, data: IVO ) {
