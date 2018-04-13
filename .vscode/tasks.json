@@ -16,7 +16,7 @@
         },
         {
             "type": "npm",
-            "script": "build"
+            "script": "package"
         }
     ]
 }

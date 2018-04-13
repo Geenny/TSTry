@@ -10,6 +10,31 @@ export default class EventDispathcer {
             target.handler(event);
         }
     }
+    /**
+     * Проверка наличия данного слушателя событий по @type
+     * @param type
+     * @param handler
+     */
+    hasEventListener(type, handler = null) {
+        for (let eventVO of this._dispatcher) {
+            if (eventVO.type == type) {
+                if (handler == null) {
+                    return true;
+                }
+                else if (eventVO.handler == handler) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    /**
+     * Добавление слушателя событий @handler по @type
+     * @param type
+     * @param handler
+     * @param useCapture
+     * @param priority
+     */
     addEventListener(type, handler, useCapture = false, priority = 0) {
         if (!type || !handler)
             return;

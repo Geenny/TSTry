@@ -156,10 +156,23 @@ export default class AudioService extends Service {
         clearInterval(this.audioWrapperTimerIndex);
     }
     audioWrapperInterval() {
+        if (this._audioWrapperList.length == 0) {
+            this.audioWrappersListenerUpdate();
+        }
         for (let audioWrapper of this._audioWrapperList) {
             if (!audioWrapper.playing)
                 continue;
             audioWrapper.update();
+        }
+    }
+    // Удалить все истекшие по времени или ошибочные @AudioWrapper 
+    audioWrapperKillOutdated() {
+        for (let i = this._audioWrapperList.length - 1; i > -1; i--) {
+            let audioWrapper = this._audioWrapperList[i];
+            if (!audioWrapper.canKill)
+                continue;
+            audioWrapper.destroy();
+            this._audioWrapperList.splice(i, 1);
         }
     }
     // Создать главый экземпляр @AudioWrapperVO
@@ -199,6 +212,7 @@ export default class AudioService extends Service {
             return;
         audio = this.audioWrapperGet(vo);
         audio.play();
+        this.audioWrapperKillOutdated();
         this.audioWrappersListenerUpdate();
         return audio;
     }

@@ -6,7 +6,7 @@ import AudioEvent from './events/AudioEvent';
 import { AudioWrapperState } from './states/AudioWrapperState';
 import Time from '../../utils/Time';
 
-export default class AudioWrapper extends EventDispathcer implements IState {
+export default class AudioWrapper extends EventDispathcer implements IState, IDestroy {
 
     private _globalMute: boolean = false;
     private _audio: HTMLAudioElement;
@@ -57,15 +57,31 @@ export default class AudioWrapper extends EventDispathcer implements IState {
     public set src( value:string ) {
         if ( !value ) return;
         this.vo.src = value;
-        this.initAudio();
+        this.srcChange();
+    }
+
+    public get speed(): number { return this.vo.speed; }
+    public set speed( value: number ) {
+        this.vo.speed = value;
+        this.speedChange();
     }
 
     public get duration(): number { return this.audio.duration; }
+    public get durationInMilliseconds(): number { return ~~( this.duration * 1000 ); }
     public get progress(): number { return this.time / this.duration; }
     public get channel(): AudioServiceChannel { return this.vo.channel; }
     public get playing(): boolean { return !this.audio.paused; }
 
     public get state(): number { return this._state; }
+
+    public get canKill(): boolean { return !this.vo.immortal && this.vo.stoptime + this.vo.killtime < Time.now(); }
+
+    // Range
+    public get isRange(): boolean { return this.vo.range.size < this.durationInMilliseconds; }
+    public get startTime(): number { return this.vo.range.start; }  // секунд
+    public get finishTime(): number { return this.vo.range.finish; } // секунд
+    public get startTimeInMilliseconds(): number { return ~~( this.vo.range.start * 1000 ); }  // миллисекунд
+    public get finishTimeInMilliseconds(): number { return ~~( this.vo.range.finish * 1000 ); } // миллисекунд
 
     // INIT
 
@@ -73,18 +89,7 @@ export default class AudioWrapper extends EventDispathcer implements IState {
 
         this.initVO( vo );
         this.initAudio();
-
-        let audio = this.audio;
-
-        audio.addEventListener( "loadedmetadata", ( event ) => { this.onLoadedMetaData() } );
-        audio.addEventListener( "canplay", ( event ) => { this.onCanPlay() } );
-        audio.addEventListener( "canplaythrough", ( event ) => { this.onCanPlayThrough() } );
-        audio.addEventListener( "play", ( event ) => { this.onPlay() } );
-        audio.addEventListener( "playing", ( event ) => { this.onPlaying() } );
-        audio.addEventListener( "pause", ( event ) => { this.onPause() } );
-        audio.addEventListener( "progress", ( event ) => { this.onProgress() } );
-        audio.addEventListener( "durationchange", ( event ) => { this.onDurationChange() } );
-        audio.addEventListener( "ended", ( event ) => { this.onEnded() } );
+        this.addListeners();
     }
 
     protected initVO( vo: AudioWrapperVO ) {
@@ -98,9 +103,43 @@ export default class AudioWrapper extends EventDispathcer implements IState {
         this.volumeChange();
     }
 
+    protected initRange() {
+        if ( this.vo.range.start > this.vo.range.finish ) this.vo.range.reset();
+        if ( this.vo.range.start < 0 ) this.vo.range.start = 0;
+        if ( this.vo.range.start > this.duration ) this.vo.range.start = 0;
+        if ( this.vo.range.finish > this.duration ) this.vo.range.finish = this.duration;
+    }
+
+    private addListeners() {
+        let audio = this.audio;
+        audio.addEventListener( "loadedmetadata", ( event ) => { this.onLoadedMetaData() } );
+        audio.addEventListener( "canplay", ( event ) => { this.onCanPlay() } );
+        audio.addEventListener( "canplaythrough", ( event ) => { this.onCanPlayThrough() } );
+        audio.addEventListener( "play", ( event ) => { this.onPlay() } );
+        audio.addEventListener( "playing", ( event ) => { this.onPlaying() } );
+        audio.addEventListener( "pause", ( event ) => { this.onPause() } );
+        audio.addEventListener( "progress", ( event ) => { this.onProgress() } );
+        audio.addEventListener( "durationchange", ( event ) => { this.onDurationChange() } );
+        audio.addEventListener( "ended", ( event ) => { this.onEnded() } );
+    }
+
+    private removeListeners() {
+        let audio = this.audio;
+        audio.removeEventListener( "loadedmetadata", ( event ) => { this.onLoadedMetaData() } );
+        audio.removeEventListener( "canplay", ( event ) => { this.onCanPlay() } );
+        audio.removeEventListener( "canplaythrough", ( event ) => { this.onCanPlayThrough() } );
+        audio.removeEventListener( "play", ( event ) => { this.onPlay() } );
+        audio.removeEventListener( "playing", ( event ) => { this.onPlaying() } );
+        audio.removeEventListener( "pause", ( event ) => { this.onPause() } );
+        audio.removeEventListener( "progress", ( event ) => { this.onProgress() } );
+        audio.removeEventListener( "durationchange", ( event ) => { this.onDurationChange() } );
+        audio.removeEventListener( "ended", ( event ) => { this.onEnded() } );
+    }
+
     // HANDLERS
 
     private onLoadedMetaData() {
+        this.initRange();
         this.dispatchEvent( new AudioEvent( AudioEvent.METADATA, this ) );
     }
     private onCanPlay() {
@@ -116,7 +155,12 @@ export default class AudioWrapper extends EventDispathcer implements IState {
         this.dispatchEvent( new AudioEvent( AudioEvent.PLAYING, this ) );
     }
     private onPause() {
-        this.dispatchEvent( new AudioEvent( AudioEvent.PAUSE, this ) );
+        if ( this.isRange && this.time >= this.finishTime ) {
+            this.dispatchEvent( new AudioEvent( AudioEvent.ENDED, this ) );
+            this.audioEnded();
+        }else{
+            this.dispatchEvent( new AudioEvent( AudioEvent.PAUSE, this ) );
+        }
     }
     private onProgress() { }
     private onDurationChange() {
@@ -131,10 +175,21 @@ export default class AudioWrapper extends EventDispathcer implements IState {
     // SERVICE
     //
 
+    /**
+     * Обновить данные по @AudioWrapper
+     */
     public update() {
-        if ( this.playing ) {
-            this.dispatchEvent( new AudioEvent( AudioEvent.PROGRESS, this ) );
-        }
+        if ( !this.playing ) return;
+        this.dispatchEvent( new AudioEvent( AudioEvent.PROGRESS, this ) );
+    }
+
+    /**
+     * Удаление важных данных по @AudioWrapper после чего его можно удалить
+     */
+    public destroy() {
+        if ( this.playing ) this.stop( true );
+        this.removeListeners();
+        this._audio = null;
     }
 
     // VOLUME
@@ -160,7 +215,21 @@ export default class AudioWrapper extends EventDispathcer implements IState {
 
     public srcChange() {
         if ( this.audio.src == this.vo.src ) return;
-        this.audio.src = this.vo.src;
+        this.audio.src = this.vo.src + this.getRangeValue();
+    }
+
+    // RANGE
+
+    private getRangeValue(): string {
+        return "#t=" + String( this.startTime ) + "," + String( this.finishTime );
+    }
+
+    // SPEED
+
+    public speedChange() {
+        if ( this.audio.playbackRate == this.vo.speed ) return;
+        this.audio.playbackRate = this.vo.speed;
+        this.dispatchEvent( new AudioEvent( AudioEvent.RATE_CHANGE, this ) );
     }
 
     // STATE
@@ -175,7 +244,7 @@ export default class AudioWrapper extends EventDispathcer implements IState {
     protected fadeStoppingTime: number = 0;
     protected pauseTime: number = 0;
 
-    protected fadingKillTimeout() {
+    protected fadingClearInterval() {
         clearInterval( this.fadeStoppingInterval );
         this.fadeStoppingInterval = 0;
     }
@@ -229,7 +298,7 @@ export default class AudioWrapper extends EventDispathcer implements IState {
     }
 
     protected fadingStop() {
-        this.fadingCreateInterval();
+        this.fadingClearInterval();
 
         switch( this.state ) {
             case AudioWrapperState.STOPPING:
@@ -252,41 +321,98 @@ export default class AudioWrapper extends EventDispathcer implements IState {
 
     // AUDIO
 
+    /**
+     * Установка позиции паузы для данного audio.currentSrc
+     */
     protected audioSetPauseTime() {
         this.pauseTime = this.audio.currentTime - ( this.vo.pauseback * 0.001 );
-        if ( this.pauseTime < 0 ) this.pauseTime = 0;
-        this.audio.currentTime = this.pauseTime;
+        if ( this.pauseTime < 0 ) this.pauseTime = this.startTime;
+        this.time = this.pauseTime;
     }
+
+    /**
+     * Cброс позиции паузы
+     */
     protected audioResetPauseTime() {
-        this.pauseTime = 0;
-        this.audio.currentTime = this.pauseTime;
+        this.pauseTime = this.startTime;
+        this.time = this.pauseTime;
     }
+
+    /**
+     * Запуск проигрывания данного audio.currentSrc
+     */
     protected audioPlay() {
-        this.audio.play();
+        let promise: any = this.audio.play();
+        this.audioKillRegisterSet();
+        if ( promise === null ) return;
+        promise.catch( () => {
+            this.audioKillRegisterClear();
+            Log.error( "AudioWrapper: audio play error!" );
+        } )
     }
+    
+    /**
+     * Установка паузы для данного audio.currentSrc
+     */
     protected audioPause() {
         this.audioSetPauseTime();
         this.audio.pause();
     }
+
+    /**
+     * Остановка проигрывания audio. Сброс параметров audio.currentTime, установка статуса AudioWrapperState.WAIT
+     */
     protected audioStop() {
         this.audioPause();
         this.audioResetPauseTime();
+        this.audioKillRegisterSet();
         this.setState( AudioWrapperState.WAIT );
     }
+
+    /**
+     * Установка уровня @this.volume с виртуальной коррекцией @volume к основному уровню
+     * @param volume 
+     */
     protected audioSteppingVolume( volume: number = 1 ) {
         this.audio.volume = this.volume * volume;
     }
+
+    /**
+     * Обработка звука по окончании проигрывания
+     */
     protected audioEnded() {
         if ( this.state != AudioWrapperState.PLAY ) return;
         this.stop( true );
         if ( this.vo.loop ) {
-            this.dispatchEvent( new AudioEvent( AudioEvent.LOOP, this ) );
-            this.play();
+            this.audioLoop();
         }else if( this.vo.playtimes > 0 ) {
             this.vo.playtimes --;
-            this.dispatchEvent( new AudioEvent( AudioEvent.LOOP, this ) );
-            this.play();
+            this.audioLoop();
         }
+    }
+
+    /**
+     * Перезапуск звука
+     */
+    protected audioLoop() {
+        this.setState( AudioWrapperState.STOP );
+        this.dispatchEvent( new AudioEvent( AudioEvent.LOOP, this ) );
+        this.play( true );
+    }
+
+    /**
+     * Установка времени остановки проигрывания @this.vo.stoptime
+     */
+    protected audioKillRegisterSet() {
+        if ( this.vo.immortal ) return;
+        this.vo.stoptime = Time.now();
+    }
+
+    /**
+     * Очистка времени остановки проигрывания @this.vo.stoptime
+     */
+    protected audioKillRegisterClear() {
+        this.vo.stoptime = Number.MAX_SAFE_INTEGER;
     }
 
     // SERVICE
@@ -295,16 +421,23 @@ export default class AudioWrapper extends EventDispathcer implements IState {
 
     // IFACES
 
-    public play() {
+    public play( force: boolean = false ) {
 
         if ( this.state == AudioWrapperState.PLAY || this.state == AudioWrapperState.PLAYING ) return;
 
+        this.srcChange();
         this.volumeChange();
         this.audioPlay();
-        this.fadingStart( AudioWrapperState.PLAY );
+
+        if ( force ) {
+            this.audioSteppingVolume( 1 );
+        }else{
+            this.fadingStart( AudioWrapperState.PLAY );
+        }
     }
 
     public stop( force: boolean = false ) {
+        // if ( !this.playing ) return;
         if ( force ) {
             this.fadingStop();
             this.audioStop();

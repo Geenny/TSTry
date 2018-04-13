@@ -1,20 +1,11 @@
 import EventDispathcer from '../events/EventDispathcer';
-import KeyboardController from './keyboard/KeyboardController';
-import ResizeController from './resize/ResizeController';
-import FocusController from './focus/FocusController';
-import OrientationController from './orientation/OrientationController';
+import ControllersVO from './ControllersVO';
 export default class Controllers extends EventDispathcer {
-    constructor(application, options = null) {
+    constructor(application, controllersVO = null) {
         super();
         this._list = [];
-        this.controllerList = [
-            KeyboardController,
-            ResizeController,
-            FocusController,
-            OrientationController
-        ];
         this.application = application;
-        this.options = options;
+        this.initControllersVO(controllersVO);
         this.init();
     }
     // GET/SET
@@ -24,23 +15,29 @@ export default class Controllers extends EventDispathcer {
     set inited(value) { this._inited = value; }
     get application() { return this._application; }
     set application(value) { this._application = value; }
-    get options() { return this._options; }
-    set options(value) { this._options = value; }
+    get vo() { return this._vo; }
+    get controllerList() { return this.vo.controllerList; }
     //
     init() {
         this.inited = true;
         this.addControllers(this.controllerList);
     }
+    initControllersVO(controllersVO) {
+        this._vo = (controllersVO) ? controllersVO : new ControllersVO();
+    }
     // CONTROLLERS
+    /**
+     * Добавление всех контроллеров по списку
+     * @param list
+     */
     addControllers(list) {
         for (let ClassName of this.controllerList) {
-            let controller = new ClassName(this.application, null);
+            let controller = new ClassName(this.application, this.getOptionsForController(ClassName.name));
             this._list.push(controller);
         }
-        // this.getOptionsForController( controllerClassName )
     }
     getOptionsForController(className) {
-        return (this.options) ? this.options[className] : null;
+        return (this.vo[className]) ? this.vo[className] : this.vo.data[className];
     }
 }
 //# sourceMappingURL=Controllers.js.map

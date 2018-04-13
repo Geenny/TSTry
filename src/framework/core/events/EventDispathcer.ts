@@ -15,7 +15,32 @@ export default class EventDispathcer {
         }
     }
 
-    addEventListener( type: string, handler:Function, useCapture: boolean = false, priority: number = 0 ) {
+    /**
+     * Проверка наличия данного слушателя событий по @type
+     * @param type 
+     * @param handler 
+     */
+    public hasEventListener( type: string, handler: Function = null ): boolean {
+        for ( let eventVO of this._dispatcher ) {
+            if ( eventVO.type == type ) {
+                if ( handler == null ) {
+                    return true;
+                }else if ( eventVO.handler == handler ) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Добавление слушателя событий @handler по @type
+     * @param type 
+     * @param handler 
+     * @param useCapture 
+     * @param priority 
+     */
+    public addEventListener( type: string, handler:Function, useCapture: boolean = false, priority: number = 0 ) {
         if ( !type || !handler ) return;
         this._dispatcher.push( new EventVO( type, handler, useCapture, priority ) );
     }
@@ -25,7 +50,7 @@ export default class EventDispathcer {
      * @param type 
      * @param handler 
      */
-    removeEventListener( type:string, handler:Function ) {
+    public removeEventListener( type:string, handler:Function ) {
         for ( let i = this._dispatcher.length - 1; i > -1; i-- ) {
             let target: EventVO = this._dispatcher[ i ];
             if ( target.type != type && target.handler != handler ) continue;
@@ -36,7 +61,7 @@ export default class EventDispathcer {
     /**
      * Очистка всех слушателей
      */
-    removeEventListeners() {
+    public removeEventListeners() {
         while( this._dispatcher.length ) {
             let target: EventVO = this._dispatcher[ this._dispatcher.length - 1 ];
             this.removeEventListener( target.type, target.handler );

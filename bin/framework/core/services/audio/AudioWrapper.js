@@ -1,5 +1,6 @@
 import AudioWrapperVO from './vo/AudioWrapperVO';
 import EventDispathcer from '../../events/EventDispathcer';
+import Log from '../../utils/Log';
 import AudioEvent from './events/AudioEvent';
 import { AudioWrapperState } from './states/AudioWrapperState';
 import Time from '../../utils/Time';
@@ -49,27 +50,31 @@ export default class AudioWrapper extends EventDispathcer {
         if (!value)
             return;
         this.vo.src = value;
-        this.initAudio();
+        this.srcChange();
+    }
+    get speed() { return this.vo.speed; }
+    set speed(value) {
+        this.vo.speed = value;
+        this.speedChange();
     }
     get duration() { return this.audio.duration; }
+    get durationInMilliseconds() { return ~~(this.duration * 1000); }
     get progress() { return this.time / this.duration; }
     get channel() { return this.vo.channel; }
     get playing() { return !this.audio.paused; }
     get state() { return this._state; }
+    get canKill() { return !this.vo.immortal && this.vo.stoptime + this.vo.killtime < Time.now(); }
+    // Range
+    get isRange() { return this.vo.range.size < this.durationInMilliseconds; }
+    get startTime() { return this.vo.range.start; } // секунд
+    get finishTime() { return this.vo.range.finish; } // секунд
+    get startTimeInMilliseconds() { return ~~(this.vo.range.start * 1000); } // миллисекунд
+    get finishTimeInMilliseconds() { return ~~(this.vo.range.finish * 1000); } // миллисекунд
     // INIT
     init(vo) {
         this.initVO(vo);
         this.initAudio();
-        let audio = this.audio;
-        audio.addEventListener("loadedmetadata", (event) => { this.onLoadedMetaData(); });
-        audio.addEventListener("canplay", (event) => { this.onCanPlay(); });
-        audio.addEventListener("canplaythrough", (event) => { this.onCanPlayThrough(); });
-        audio.addEventListener("play", (event) => { this.onPlay(); });
-        audio.addEventListener("playing", (event) => { this.onPlaying(); });
-        audio.addEventListener("pause", (event) => { this.onPause(); });
-        audio.addEventListener("progress", (event) => { this.onProgress(); });
-        audio.addEventListener("durationchange", (event) => { this.onDurationChange(); });
-        audio.addEventListener("ended", (event) => { this.onEnded(); });
+        this.addListeners();
     }
     initVO(vo) {
         if (!vo)
@@ -81,8 +86,43 @@ export default class AudioWrapper extends EventDispathcer {
         this.srcChange();
         this.volumeChange();
     }
+    initRange() {
+        if (this.vo.range.start > this.vo.range.finish)
+            this.vo.range.reset();
+        if (this.vo.range.start < 0)
+            this.vo.range.start = 0;
+        if (this.vo.range.start > this.duration)
+            this.vo.range.start = 0;
+        if (this.vo.range.finish > this.duration)
+            this.vo.range.finish = this.duration;
+    }
+    addListeners() {
+        let audio = this.audio;
+        audio.addEventListener("loadedmetadata", (event) => { this.onLoadedMetaData(); });
+        audio.addEventListener("canplay", (event) => { this.onCanPlay(); });
+        audio.addEventListener("canplaythrough", (event) => { this.onCanPlayThrough(); });
+        audio.addEventListener("play", (event) => { this.onPlay(); });
+        audio.addEventListener("playing", (event) => { this.onPlaying(); });
+        audio.addEventListener("pause", (event) => { this.onPause(); });
+        audio.addEventListener("progress", (event) => { this.onProgress(); });
+        audio.addEventListener("durationchange", (event) => { this.onDurationChange(); });
+        audio.addEventListener("ended", (event) => { this.onEnded(); });
+    }
+    removeListeners() {
+        let audio = this.audio;
+        audio.removeEventListener("loadedmetadata", (event) => { this.onLoadedMetaData(); });
+        audio.removeEventListener("canplay", (event) => { this.onCanPlay(); });
+        audio.removeEventListener("canplaythrough", (event) => { this.onCanPlayThrough(); });
+        audio.removeEventListener("play", (event) => { this.onPlay(); });
+        audio.removeEventListener("playing", (event) => { this.onPlaying(); });
+        audio.removeEventListener("pause", (event) => { this.onPause(); });
+        audio.removeEventListener("progress", (event) => { this.onProgress(); });
+        audio.removeEventListener("durationchange", (event) => { this.onDurationChange(); });
+        audio.removeEventListener("ended", (event) => { this.onEnded(); });
+    }
     // HANDLERS
     onLoadedMetaData() {
+        this.initRange();
         this.dispatchEvent(new AudioEvent(AudioEvent.METADATA, this));
     }
     onCanPlay() {
@@ -98,7 +138,13 @@ export default class AudioWrapper extends EventDispathcer {
         this.dispatchEvent(new AudioEvent(AudioEvent.PLAYING, this));
     }
     onPause() {
-        this.dispatchEvent(new AudioEvent(AudioEvent.PAUSE, this));
+        if (this.isRange && this.time >= this.finishTime) {
+            this.dispatchEvent(new AudioEvent(AudioEvent.ENDED, this));
+            this.audioEnded();
+        }
+        else {
+            this.dispatchEvent(new AudioEvent(AudioEvent.PAUSE, this));
+        }
     }
     onProgress() { }
     onDurationChange() {
@@ -111,10 +157,22 @@ export default class AudioWrapper extends EventDispathcer {
     //
     // SERVICE
     //
+    /**
+     * Обновить данные по @AudioWrapper
+     */
     update() {
-        if (this.playing) {
-            this.dispatchEvent(new AudioEvent(AudioEvent.PROGRESS, this));
-        }
+        if (!this.playing)
+            return;
+        this.dispatchEvent(new AudioEvent(AudioEvent.PROGRESS, this));
+    }
+    /**
+     * Удаление важных данных по @AudioWrapper после чего его можно удалить
+     */
+    destroy() {
+        if (this.playing)
+            this.stop(true);
+        this.removeListeners();
+        this._audio = null;
     }
     // VOLUME
     volumeUpdate() {
@@ -136,7 +194,18 @@ export default class AudioWrapper extends EventDispathcer {
     srcChange() {
         if (this.audio.src == this.vo.src)
             return;
-        this.audio.src = this.vo.src;
+        this.audio.src = this.vo.src + this.getRangeValue();
+    }
+    // RANGE
+    getRangeValue() {
+        return "#t=" + String(this.startTime) + "," + String(this.finishTime);
+    }
+    // SPEED
+    speedChange() {
+        if (this.audio.playbackRate == this.vo.speed)
+            return;
+        this.audio.playbackRate = this.vo.speed;
+        this.dispatchEvent(new AudioEvent(AudioEvent.RATE_CHANGE, this));
     }
     // STATE
     setState(state) {
@@ -209,55 +278,107 @@ export default class AudioWrapper extends EventDispathcer {
         }
     }
     // AUDIO
+    /**
+     * Установка позиции паузы для данного audio.currentSrc
+     */
     audioSetPauseTime() {
         this.pauseTime = this.audio.currentTime - (this.vo.pauseback * 0.001);
         if (this.pauseTime < 0)
-            this.pauseTime = 0;
-        this.audio.currentTime = this.pauseTime;
+            this.pauseTime = this.startTime;
+        this.time = this.pauseTime;
     }
+    /**
+     * Cброс позиции паузы
+     */
     audioResetPauseTime() {
-        this.pauseTime = 0;
-        this.audio.currentTime = this.pauseTime;
+        this.pauseTime = this.startTime;
+        this.time = this.pauseTime;
     }
+    /**
+     * Запуск проигрывания данного audio.currentSrc
+     */
     audioPlay() {
-        this.audio.play();
+        let promise = this.audio.play();
+        this.audioKillRegisterSet();
+        if (promise === null)
+            return;
+        promise.catch(() => {
+            this.audioKillRegisterClear();
+            Log.error("AudioWrapper: audio play error!");
+        });
     }
+    /**
+     * Установка паузы для данного audio.currentSrc
+     */
     audioPause() {
         this.audioSetPauseTime();
         this.audio.pause();
     }
+    /**
+     * Остановка проигрывания audio. Сброс параметров audio.currentTime, установка статуса AudioWrapperState.WAIT
+     */
     audioStop() {
         this.audioPause();
         this.audioResetPauseTime();
+        this.audioKillRegisterSet();
         this.setState(AudioWrapperState.WAIT);
     }
+    /**
+     * Установка уровня @this.volume с виртуальной коррекцией @volume к основному уровню
+     * @param volume
+     */
     audioSteppingVolume(volume = 1) {
         this.audio.volume = this.volume * volume;
     }
+    /**
+     * Обработка звука по окончании проигрывания
+     */
     audioEnded() {
         if (this.state != AudioWrapperState.PLAY)
             return;
         this.stop(true);
         if (this.vo.loop) {
-            this.dispatchEvent(new AudioEvent(AudioEvent.LOOP, this));
-            this.play();
+            this.audioLoop();
         }
         else if (this.vo.playtimes > 0) {
             this.vo.playtimes--;
-            this.dispatchEvent(new AudioEvent(AudioEvent.LOOP, this));
-            this.play();
+            this.audioLoop();
         }
+    }
+    /**
+     * Перезапуск звука
+     */
+    audioLoop() {
+        this.setState(AudioWrapperState.STOP);
+        this.dispatchEvent(new AudioEvent(AudioEvent.LOOP, this));
+        this.play();
+    }
+    /**
+     * Установка времени остановки проигрывания @this.vo.stoptime
+     */
+    audioKillRegisterSet() {
+        if (this.vo.immortal)
+            return;
+        this.vo.stoptime = Time.now();
+    }
+    /**
+     * Очистка времени остановки проигрывания @this.vo.stoptime
+     */
+    audioKillRegisterClear() {
+        this.vo.stoptime = Number.MAX_SAFE_INTEGER;
     }
     // SERVICE
     // IFACES
     play() {
         if (this.state == AudioWrapperState.PLAY || this.state == AudioWrapperState.PLAYING)
             return;
+        this.srcChange();
         this.volumeChange();
         this.audioPlay();
         this.fadingStart(AudioWrapperState.PLAY);
     }
     stop(force = false) {
+        // if ( !this.playing ) return;
         if (force) {
             this.fadingStop();
             this.audioStop();
