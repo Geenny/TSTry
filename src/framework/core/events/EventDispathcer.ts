@@ -10,7 +10,7 @@ export default class EventDispathcer {
     dispatchEvent( event:Event ) {
         for ( let i = 0; i < this._dispatcher.length; i++ ) {
             let target = this._dispatcher[ i ];
-            if ( target.type != event.type ) continue;
+            if ( target.type != event.type && target.type != Event.ANY ) continue;
             target.handler( event );
         }
     }

@@ -24,6 +24,11 @@ interface IWindow {
      */
     action: number;
 
+    /**
+     * Передает окну данные по тому или получило оно фокус
+     */
+    focus: boolean;
+
     open(): void;
     close(): void;
 

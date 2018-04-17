@@ -1,6 +1,8 @@
 
 export default class Event {
 
+    public static get ANY(): string { return "any"; }
+
     public type: string;
     public bubbles: boolean;
     public cancelable: boolean;

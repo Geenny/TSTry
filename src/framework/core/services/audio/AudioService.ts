@@ -64,12 +64,20 @@ export default class AudioService extends Service {
 
     // CHANNEL
 
+    /**
+     * Создание списка каналов по данным из @this.vo
+     */
     protected initChannels() {
         for ( let channelName of this.vo.channels ) {
             this.channelAddByName( channelName );
         }
     }
 
+    /**
+     * Добавление нового канала по имени
+     * @param name Имя нового канала
+     * @param volume Уровень звука нового канала
+     */
     public channelAddByName( name: string, volume: number = 1 ): AudioServiceChannel {
         
         let channel: AudioServiceChannel;
@@ -84,16 +92,30 @@ export default class AudioService extends Service {
 
     }
 
+    /**
+     * Вернуть канал @AudioServiceChannel по имени @name 
+     * @param name Имя канала для возврата
+     */
     protected channelGetByName( name: string ): AudioServiceChannel {
         for ( let channel of this._channels ) {
             if ( channel.name == name ) return channel;
         }
         return null;
     }
+
+    /**
+     * Вернуть канал по позиции в списке
+     * @param index Позиция в списке
+     */
     protected channelGetChannelByIndex( index: number = 0 ): AudioServiceChannel {
         return ( index > -1 && this._channels.length > index ) ? this._channels[ index ] : null;
     }
 
+    /**
+     * Создание канала
+     * @param name 
+     * @param volume 
+     */
     protected channelCreate( name: string, volume: number = 1 ): AudioServiceChannel {
         if ( !name ) return null;
 
@@ -104,6 +126,10 @@ export default class AudioService extends Service {
         return channel;
     }
 
+    /**
+     * Вернуть канал по параметру @name или создать даже если имя не было передано
+     * @param name 
+     */
     private channelGetByNameOrCreate( name: string = null ): AudioServiceChannel {
 
         let channel: AudioServiceChannel = this.channelAddByName( name );
@@ -156,7 +182,32 @@ export default class AudioService extends Service {
 
     private audioWrapperTimerIndex: number = 0;
 
-    private audioWrapperGet( vo: AudioWrapperVO ): AudioWrapper {
+    /**
+     * Вернуть звук по имени. Будет возвращен первый попавшийся звук, так как
+     * значение имени не является уникальным для звука.
+     * @param name 
+     */
+    protected audioWrapperGetByName( name: string ): AudioWrapper {
+        for ( let i = this._audioWrapperList.length - 1; i > -1; i-- ) {
+            let audioWrapper: AudioWrapper = this._audioWrapperList[ i ];
+            if ( audioWrapper.name == name ) return audioWrapper;
+        }
+        return null;
+    }
+
+    /**
+     * Вернуть звук по @vo
+     * @param vo 
+     */
+    protected audioWrapperGetByVO( vo: AudioWrapperVO ): AudioWrapper {
+        for ( let i = this._audioWrapperList.length - 1; i > -1; i-- ) {
+            let audioWrapper: AudioWrapper = this._audioWrapperList[ i ];
+            if ( audioWrapper.vo == vo ) return audioWrapper;
+        }
+        return null;
+    }
+
+    private audioWrapperCreate( vo: AudioWrapperVO ): AudioWrapper {
         let audioWrapper = new AudioWrapper( vo );
         this._audioWrapperList.push( audioWrapper );
         return audioWrapper;
@@ -255,7 +306,7 @@ export default class AudioService extends Service {
 
         if ( !vo ) return;
 
-        audio = this.audioWrapperGet( vo );
+        audio = this.audioWrapperCreate( vo );
         audio.play();
 
         this.audioWrapperKillOutdated();
@@ -263,6 +314,30 @@ export default class AudioService extends Service {
 
         return audio;
         
+    }
+
+    /**
+     * Остановка звука по имени @name или экземпляру @AudioWrapperVO
+     * @param input 
+     */
+    public stop( input: string | AudioWrapperVO ): AudioWrapper {
+
+        if ( !input ) return null;
+
+        let audioWrapper: AudioWrapper;
+
+        if ( input instanceof AudioWrapperVO ) {
+            audioWrapper = this.audioWrapperGetByVO( input );
+        }else if ( typeof input == "string" ) {
+            audioWrapper = this.audioWrapperGetByName( input );
+        }
+
+        if ( audioWrapper ) {
+            audioWrapper.stop();
+        }
+
+        return audioWrapper;
+
     }
 
 }

@@ -1,6 +1,9 @@
 import EventDispathcer from '../../events/EventDispathcer';
 import Application from '../../../application/Application';
 import WindowServiceVO from './vo/WindowServiceVO';
+import WindowEvent from './events/WindowEvent';
+import Window from './Window';
+import Event from '../../events/Event';
 
 export default class WindowService extends EventDispathcer implements IEnable, IInit, IDestroy {
 
@@ -31,22 +34,58 @@ export default class WindowService extends EventDispathcer implements IEnable, I
 
     protected get vo(): WindowServiceVO { return this._vo; }
 
+    /**
+     * Список элементов @IWindow
+     */
+    public get windows(): IWindow[] { return this._windows; }
+
+    /**
+     * Количество элементов @IWindow которые открыты
+     */
+    public get length(): number { return this._windows.length; }
+
     //
     // INIT
     // 
 
     public init() {
-        this.enable = true;
+        this._enable = true;
+        this._inited = true;
     }
 
     protected initVO( vo: WindowServiceVO ) {
         this._vo = ( vo ) ? vo : new WindowServiceVO();
     }
 
+
+    //
+    // WINDOW LISTENERS
+    //
+
+    protected addWidnowListeners( window: Window ): Window {
+        if ( !window ) return null;
+        window.addEventListener( Event.ANY, this.onWindow );
+        return window;
+    }
+
+    protected removeWindowListeners( window: Window ): Window {
+        if ( !window ) return null;
+        window.removeEventListener( Event.ANY, this.onWindow );
+        return window;
+    }
+
+    protected onWindow( event: WindowEvent ) {
+        this.dispatchEvent( new WindowEvent( event.type, event.window, this ) );
+    }
+
     // DESTROY
 
     public destroy() {
-
+        while( this.length ) {
+            let window: Window = this._windows.shift() as Window;
+            this.removeWindowListeners( window );
+            window.destroy();
+        }
     }
 
 }
