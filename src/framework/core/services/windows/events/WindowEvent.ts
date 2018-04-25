@@ -3,6 +3,10 @@ import Event from '../../../events/Event';
 
 export default class WindowEvent extends Event {
 
+    // 
+    public static get INIT(): string { return "windowInit"; }
+
+    // TOTAL
     public static get OPEN(): string { return "windowOpen"; }
     public static get STATE(): string { return "windowState"; }
 

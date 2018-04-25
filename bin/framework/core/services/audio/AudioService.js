@@ -53,11 +53,19 @@ export default class AudioService extends Service {
     // AUDIO SERVICE
     //
     // CHANNEL
+    /**
+     * Создание списка каналов по данным из @this.vo
+     */
     initChannels() {
         for (let channelName of this.vo.channels) {
             this.channelAddByName(channelName);
         }
     }
+    /**
+     * Добавление нового канала по имени
+     * @param name Имя нового канала
+     * @param volume Уровень звука нового канала
+     */
     channelAddByName(name, volume = 1) {
         let channel;
         if (!name)
@@ -69,6 +77,10 @@ export default class AudioService extends Service {
         }
         return channel;
     }
+    /**
+     * Вернуть канал @AudioServiceChannel по имени @name
+     * @param name Имя канала для возврата
+     */
     channelGetByName(name) {
         for (let channel of this._channels) {
             if (channel.name == name)
@@ -76,9 +88,18 @@ export default class AudioService extends Service {
         }
         return null;
     }
+    /**
+     * Вернуть канал по позиции в списке
+     * @param index Позиция в списке
+     */
     channelGetChannelByIndex(index = 0) {
         return (index > -1 && this._channels.length > index) ? this._channels[index] : null;
     }
+    /**
+     * Создание канала
+     * @param name
+     * @param volume
+     */
     channelCreate(name, volume = 1) {
         if (!name)
             return null;
@@ -87,6 +108,10 @@ export default class AudioService extends Service {
         channel.addEventListener(AudioChannelEvent.MUTE, this.onAudioChannelMute);
         return channel;
     }
+    /**
+     * Вернуть канал по параметру @name или создать даже если имя не было передано
+     * @param name
+     */
     channelGetByNameOrCreate(name = null) {
         let channel = this.channelAddByName(name);
         if (channel)
@@ -125,7 +150,32 @@ export default class AudioService extends Service {
             channel.globalMuteSet(this.mute);
         }
     }
-    audioWrapperGet(vo) {
+    /**
+     * Вернуть звук по имени. Будет возвращен первый попавшийся звук, так как
+     * значение имени не является уникальным для звука.
+     * @param name
+     */
+    audioWrapperGetByName(name) {
+        for (let i = this._audioWrapperList.length - 1; i > -1; i--) {
+            let audioWrapper = this._audioWrapperList[i];
+            if (audioWrapper.name == name)
+                return audioWrapper;
+        }
+        return null;
+    }
+    /**
+     * Вернуть звук по @vo
+     * @param vo
+     */
+    audioWrapperGetByVO(vo) {
+        for (let i = this._audioWrapperList.length - 1; i > -1; i--) {
+            let audioWrapper = this._audioWrapperList[i];
+            if (audioWrapper.vo == vo)
+                return audioWrapper;
+        }
+        return null;
+    }
+    audioWrapperCreate(vo) {
         let audioWrapper = new AudioWrapper(vo);
         this._audioWrapperList.push(audioWrapper);
         return audioWrapper;
@@ -210,11 +260,30 @@ export default class AudioService extends Service {
         }
         if (!vo)
             return;
-        audio = this.audioWrapperGet(vo);
+        audio = this.audioWrapperCreate(vo);
         audio.play();
         this.audioWrapperKillOutdated();
         this.audioWrappersListenerUpdate();
         return audio;
+    }
+    /**
+     * Остановка звука по имени @name или экземпляру @AudioWrapperVO
+     * @param input
+     */
+    stop(input) {
+        if (!input)
+            return null;
+        let audioWrapper;
+        if (input instanceof AudioWrapperVO) {
+            audioWrapper = this.audioWrapperGetByVO(input);
+        }
+        else if (typeof input == "string") {
+            audioWrapper = this.audioWrapperGetByName(input);
+        }
+        if (audioWrapper) {
+            audioWrapper.stop();
+        }
+        return audioWrapper;
     }
 }
 AudioService.AUDIO_CHANNEL_NAME_DEFAULT = "main";

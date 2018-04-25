@@ -1,3 +1,4 @@
+import Event from "./Event";
 export default class EventDispathcer {
     constructor() {
         this._dispatcher = [];
@@ -5,7 +6,7 @@ export default class EventDispathcer {
     dispatchEvent(event) {
         for (let i = 0; i < this._dispatcher.length; i++) {
             let target = this._dispatcher[i];
-            if (target.type != event.type)
+            if (target.type != event.type && target.type != Event.ANY)
                 continue;
             target.handler(event);
         }

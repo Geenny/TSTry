@@ -3,6 +3,8 @@ import EventDispathcer from '../../events/EventDispathcer';
 import { WindowState } from './states/WindowState';
 import WindowEvent from './events/WindowEvent';
 import WindowVO from './vo/WindowVO';
+import Log from '../../utils/Log';
+import WindowService from './WindowService';
 
 export default class Window extends EventDispathcer implements IWindow, IDestroy, IEnable, IInit, IState {
 
@@ -48,7 +50,8 @@ export default class Window extends EventDispathcer implements IWindow, IDestroy
     public get group(): string | number { return this.vo.group; }
     public get action(): number { return this.vo.action; }
 
-    protected get vo(): WindowVO { return this._vo; }
+    public get unique(): number { return this.vo.unique; }
+    public set unique( value: number ) { this.vo.unique = value; }
 
     public get visible(): boolean { return this._visible; }
     public set visible( value: boolean ) { this._visible = value; }
@@ -59,6 +62,12 @@ export default class Window extends EventDispathcer implements IWindow, IDestroy
         this._focus = value;
         this.dispatchEvent( new WindowEvent( ( value ) ? WindowEvent.FOCUS : WindowEvent.UNFOCUS, this ) );
     }
+
+    public get ID(): number | string { return this.vo.ID; }
+    public get name(): string { return this.vo.name; }
+
+    protected get vo(): WindowVO { return this._vo; }
+    protected get service(): WindowService { return this.vo.windowService; }
 
     // Фичи
     public animated(): boolean { return this.vo.animation; }
@@ -72,6 +81,8 @@ export default class Window extends EventDispathcer implements IWindow, IDestroy
     public init() {
         this._inited = true;
         this._enable = true;
+        this.setState(WindowState.WAIT);
+        this.dispatchEvent( new WindowEvent( WindowEvent.INIT, this ) );
     }
 
     public initVO( vo: WindowVO ) {
@@ -130,7 +141,8 @@ export default class Window extends EventDispathcer implements IWindow, IDestroy
 
         if ( this.state != WindowState.WAIT ) return;
         if ( !this.setState( WindowState.OPEN ) ) return;
-
+        if ( this.service.debug ) Log.log( this.name + " OPEN" );
+        
         this.draw();
         this.animationShow();
 

@@ -1,1 +1,1 @@
-{"version":3,"file":"Time.js","sourceRoot":"","sources":["../../../../src/framework/core/utils/Time.ts"],"names":[],"mappings":"AAAA,MAAM,CAAC,OAAO;IAEH,MAAM,CAAC,GAAG;QACb,MAAM,CAAC,IAAI,CAAC,GAAG,EAAE,CAAC;IACtB,CAAC;CAEJ"}
+{"version":3,"file":"Time.js","sourceRoot":"","sources":["../../../../src/framework/core/utils/Time.ts"],"names":[],"mappings":"AAAA,MAAM,CAAC,OAAO;IAEV;;OAEG;IACI,MAAM,CAAC,GAAG;QACb,MAAM,CAAC,IAAI,CAAC,GAAG,EAAE,CAAC;IACtB,CAAC;CAEJ"}

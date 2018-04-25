@@ -3,6 +3,9 @@ import Log from './framework/core/utils/Log';
 import ApplicationEvent from './framework/application/events/ApplicationEvent';
 import AudioService from './framework/core/services/audio/AudioService';
 import AudioServiceVO from './framework/core/services/audio/vo/AudioServiceVO';
+import WindowService from './framework/core/services/windows/WindowService';
+import WindowServiceVO from './framework/core/services/windows/vo/WindowServiceVO';
+import WindowVO from './framework/core/services/windows/vo/WindowVO';
 export default class Main extends Application {
     constructor(container) {
         super(container);
@@ -47,32 +50,32 @@ export default class Main extends Application {
         //     Log.log( event );
         // });
         // Create WebSocket connection.
-        const socket = new WebSocket('ws://google.com');
-        socket.onopen = function () {
-            Log.log("Соединение установлено.");
-            socket.send("ping");
-        };
-        socket.onclose = function (event) {
-            if (event.wasClean) {
-                Log.log('Соединение закрыто чисто');
-            }
-            else {
-                Log.log('Обрыв соединения'); // например, "убит" процесс сервера
-            }
-            Log.log('Код: ' + event.code + ' причина: ' + event.reason);
-        };
-        socket.onmessage = function (event) {
-            Log.log("Получены данные");
-            Log.log(event.data);
-        };
-        socket.onerror = function (error) {
-            Log.log("Ошибка");
-            Log.log(error["message"]);
-        };
-        //let tcp: TCPSocket = new TCPSocket
-        // window.addEventListener("deviceorientation", (event) => {
-        //     Log.log(event);
-        // });
+        // const socket = new WebSocket('ws://google.com');
+        // socket.onopen = function() {
+        //     Log.log("Соединение установлено.");
+        //     socket.send( "ping" );
+        // };
+        // socket.onclose = function(event) {
+        //     if (event.wasClean) {
+        //         Log.log('Соединение закрыто чисто');
+        //     } else {
+        //         Log.log('Обрыв соединения');
+        //     }
+        //     Log.log('Код: ' + event.code + ' причина: ' + event.reason);
+        // };
+        // socket.onmessage = function(event) {
+        //     Log.log( "Получены данные" );
+        //     Log.log( event.data );
+        // };
+        // socket.onerror = function(error) {
+        //     Log.log( "Ошибка" );
+        //     Log.log( error["message"] );
+        // };
+        let windowService = new WindowService(new WindowServiceVO());
+        windowService.init();
+        windowService.windowOpen(new WindowVO());
+        windowService.windowOpen(new WindowVO());
+        windowService.windowOpen(new WindowVO());
     }
 }
 //# sourceMappingURL=Main.js.map

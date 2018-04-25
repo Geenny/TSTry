@@ -1,4 +1,7 @@
 export default class Time {
+    /**
+     *
+     */
     static now() {
         return Date.now();
     }

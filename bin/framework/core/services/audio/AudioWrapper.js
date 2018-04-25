@@ -211,7 +211,7 @@ export default class AudioWrapper extends EventDispathcer {
     setState(state) {
         this._state = state;
     }
-    fadingKillTimeout() {
+    fadingClearInterval() {
         clearInterval(this.fadeStoppingInterval);
         this.fadeStoppingInterval = 0;
     }
@@ -258,7 +258,7 @@ export default class AudioWrapper extends EventDispathcer {
         }
     }
     fadingStop() {
-        this.fadingCreateInterval();
+        this.fadingClearInterval();
         switch (this.state) {
             case AudioWrapperState.STOPPING:
                 this.setState(AudioWrapperState.STOP);
@@ -351,7 +351,7 @@ export default class AudioWrapper extends EventDispathcer {
     audioLoop() {
         this.setState(AudioWrapperState.STOP);
         this.dispatchEvent(new AudioEvent(AudioEvent.LOOP, this));
-        this.play();
+        this.play(true);
     }
     /**
      * Установка времени остановки проигрывания @this.vo.stoptime
@@ -369,13 +369,18 @@ export default class AudioWrapper extends EventDispathcer {
     }
     // SERVICE
     // IFACES
-    play() {
+    play(force = false) {
         if (this.state == AudioWrapperState.PLAY || this.state == AudioWrapperState.PLAYING)
             return;
         this.srcChange();
         this.volumeChange();
         this.audioPlay();
-        this.fadingStart(AudioWrapperState.PLAY);
+        if (force) {
+            this.audioSteppingVolume(1);
+        }
+        else {
+            this.fadingStart(AudioWrapperState.PLAY);
+        }
     }
     stop(force = false) {
         // if ( !this.playing ) return;
