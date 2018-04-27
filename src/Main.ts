@@ -13,8 +13,18 @@ import Range from './framework/core/utils/Range';
 import WindowService from './framework/core/services/windows/WindowService';
 import WindowServiceVO from './framework/core/services/windows/vo/WindowServiceVO';
 import WindowVO from './framework/core/services/windows/vo/WindowVO';
+import ApplicationDependeneManager from './core/dependency/ApplicationDependenceManager';
+import DependenceManager from './framework/core/dependency/DependenceManager';
+import DependencyManagerEvent from './framework/core/dependency/events/DependencyManagerEvent';
+import Event from './framework/core/events/Event';
+import UserDependency from './user/UserDependency';
 
 export default class Main extends Application {
+
+    public static instance: Main;
+
+    private _applicationDependencyList: IDependency[] = [];
+    private _applicationDepndenceManager: ApplicationDependeneManager;
 
     constructor( container: HTMLElement ) {
 
@@ -25,9 +35,21 @@ export default class Main extends Application {
         this.addEventListener( ApplicationEvent.APPLICATION_KEYBOARD_KEYDOWN, (e) => {
             Log.log(e);
 
-            // if ( e.data.key == "q" ) {
-            //     aw.speed += 0.1;
-            // }
+            if ( e.data.key == "q" ) {
+                windowService.windowOpen( new WindowVO( { action:1 } ) );
+            }
+            if ( e.data.key == "w" ) {
+                windowService.windowOpen( new WindowVO( { action:2 } ) );
+            }
+            if ( e.data.key == "e" ) {
+                windowService.windowOpen( new WindowVO( { action:4 } ) );
+            }
+            if ( e.data.key == "r" ) {
+                windowService.windowOpen( new WindowVO( { action:64 } ) );
+            }
+            if ( e.data.key == "t" ) {
+                windowService.windowOpen( new WindowVO( { action:128 } ) );
+            }
             // if ( e.data.key == "a" ) {
             //     aw.speed -= 0.1;
             // }
@@ -96,10 +118,58 @@ export default class Main extends Application {
         let windowService: WindowService = new WindowService( new WindowServiceVO( ) );
         windowService.init();
 
-        windowService.windowOpen( new WindowVO() );
-        windowService.windowOpen( new WindowVO() );
-        windowService.windowOpen( new WindowVO() );
+    }
 
+    // GET/SET
+
+    public get applicationDependenceManager(): ApplicationDependeneManager { return this._applicationDepndenceManager; }
+
+    //
+    // INIT
+    //
+
+    public init() {
+        super.init();
+
+        this.initMain();
+        this.initDependenceManager();
+        this.initDependencies();
+    }
+
+    //
+    //
+    //
+
+    protected initMain() {
+        Main.instance = this;
+    }
+
+    //
+    // APPLICATION MANAGER
+    //
+
+    protected initDependenceManager() {
+
+        let manager = new ApplicationDependeneManager();
+        manager.addEventListener( Event.ANY, this.onApplicationManager );
+        manager.dependencyListAdd(  this.dependencyListGet() );
+
+        this._applicationDepndenceManager = manager;
+
+    }
+
+    protected initDependencies() {
+
+        let user: UserDependency = new UserDependency( 10, [] );
+
+    }
+
+    protected onApplicationManager( event: DependencyManagerEvent ) {
+
+    }
+
+    protected dependencyListGet(): IDependency[] {
+        return this._applicationDependencyList;
     }
 
 }

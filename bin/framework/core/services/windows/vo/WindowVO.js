@@ -1,7 +1,8 @@
 import { WindowType } from '../states/WindowType';
+import WindowService from '../WindowService';
 export default class WindowVO {
     constructor(data = null) {
-        this.windowService = null;
+        this.windowService = WindowService.service;
         this.type = WindowType.DEFAULT;
         this.priority = 0;
         this.action = 0; // bitmask: 1 - default, 2 - autoclose, 4 - closeable, 8 - faderclose, 16 - strong

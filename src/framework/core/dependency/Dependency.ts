@@ -8,6 +8,7 @@ export default abstract class Dependency extends EventDispathcer implements IDep
 
     private _inited: boolean;
     private _state: number | string;
+    private _manager: DependenceManager;
     private _ID: number;
     private _name: string;
     private _description: string;
@@ -16,11 +17,10 @@ export default abstract class Dependency extends EventDispathcer implements IDep
     private _process: boolean;
     private _errorMessage: string;
     private _list: number[] = [];
-    private _manager: DependenceManager;
 
-    constructor( manager: DependenceManager, dependencies: number[] = [] ) {
+    constructor( ID: number, dependencies: number[] = [] ) {
         super();
-        this._manager = manager;
+        this._ID = ID;
         this._list = dependencies;
     }
 
@@ -49,6 +49,7 @@ export default abstract class Dependency extends EventDispathcer implements IDep
     public get errorMessage(): string { return this._errorMessage; }
 
     public get manager(): DependenceManager { return this._manager; }
+    public set manager( value: DependenceManager ) { this._manager = value; }
 
     // 
 

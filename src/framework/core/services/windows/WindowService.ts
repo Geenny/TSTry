@@ -126,12 +126,19 @@ export default class WindowService extends EventDispathcer implements IEnable, I
 
     // WINDOWS HANDLERS
 
+    /**
+     * Стандартный общий обработчик всех событий @Window
+     * @param event 
+     */
     protected onWindow( event: WindowEvent ) {
         this.dispatchEvent( new WindowEvent( event.type, event.window, this ) );
     }
 
     // DESTROY
 
+    /**
+     * Очистка данных и уничтожение надстроек функционала всех окон
+     */
     public destroy() {
         while( this.length ) {
             let window: Window = this._windows.shift() as Window;
@@ -139,6 +146,8 @@ export default class WindowService extends EventDispathcer implements IEnable, I
             window.destroy();
         }
     }
+
+
 
     //
     // WINDOWs MANAGE
@@ -148,13 +157,14 @@ export default class WindowService extends EventDispathcer implements IEnable, I
      * Создание @Window по стандартному или модифицированному @WindowVO
      * @param windowVO 
      */
-    public windowOpen( windowVO: WindowVO = null ): Window {
+    public windowOpen( windowVO: WindowVO = null ): IWindow {
         
         if ( !windowVO ) return null;
         if ( this.debug ) Log.log( windowVO.name + " OPEN." );
-        if ( !this.isUnique( windowVO ) ) return null;
+        if ( this.isUniqueWindowOpened( windowVO ) ) return null;
 
-        let window: Window = new Window( windowVO );
+        let Class = this.windowClassDefaultGet();
+        let window: IWindow = new Class( windowVO );
         window.unique = this.windowCountUnique();
 
         this._windows.push( window );
@@ -164,13 +174,17 @@ export default class WindowService extends EventDispathcer implements IEnable, I
 
     }
 
-    public windowClose( window: Window ) {
+    /**
+     * Закрытие окна по параметру экземпляра окна
+     * @param window 
+     */
+    public windowClose( window: IWindow ) {
 
         let index: number = this._windows.indexOf( window );
         if ( index == -1 ) return;
 
         this._windows.splice( index, 1 );
-        window.close();
+        this.windowCloseAction( window );
 
     }
 
@@ -212,22 +226,24 @@ export default class WindowService extends EventDispathcer implements IEnable, I
     }
 
 
+    //
     // SHOW MANAGE
+    //
 
     /**
      * Отображение окна
      * @param window 
      */
-    protected show( window: Window ) {
+    protected show( window: IWindow ): Window {
 
-        if ( !window ) return;
+        if ( !window ) return null;
 
-        let windowsListForStack: Window[] = [];
-        let windowsListForClose: Window[] = [];
+        let windowsListForStack: IWindow[] = [];
+        let windowsListForClose: IWindow[] = [];
 
         for ( let i = 0; i < this.length; i++ ) {
 
-            let windowInStack: Window = this._windows[ i ] as Window;
+            let windowInStack: IWindow = this._windows[ i ] as Window;
 
             // Если это то же окно - пропустить
             if ( windowInStack == window ) continue;
@@ -247,13 +263,15 @@ export default class WindowService extends EventDispathcer implements IEnable, I
         if ( windowsListForStack.length == this.length - 1 ) {
             this.windowsClose( windowsListForClose );
             this.windowsFocusSet( windowsListForStack, false );
-            window.open();
+            this.windowOpenAction( window );
             window.focus = true;
         }
 
+        return window as Window;
+
     }
 
-    protected windowCheckCompareShowPossibility( windowForShow: Window, windowForCompare: Window ): boolean {
+    protected windowCheckCompareShowPossibility( windowForShow: IWindow, windowForCompare: IWindow ): boolean {
 
         // Для равный по условиям окон, проверяется только приоритет
         if ( windowForShow.action == windowForCompare.action ) {
@@ -273,7 +291,7 @@ export default class WindowService extends EventDispathcer implements IEnable, I
      * @param windowForShow 
      * @param windowForCompare 
      */
-    protected windowCheckCloseInfluence( windowForShow: Window, windowForCompare: Window ): boolean {
+    protected windowCheckCloseInfluence( windowForShow: IWindow, windowForCompare: IWindow ): boolean {
 
         let influence = false;
 
@@ -317,18 +335,39 @@ export default class WindowService extends EventDispathcer implements IEnable, I
      * Проверка @windowVO для сравнения типов
      * @param windowVO 
      */
-    protected isUnique( windowVO: WindowVO ): boolean {
-        for ( let window of this._windows ) {
-            if ( window.name == windowVO.name ) return false;
+    protected isUniqueWindowOpened( windowVO: WindowVO ): boolean {
+        if ( this.windowActionCheck( windowVO.action, WindowAction.UNIQUE ) ) {
+            for ( let window of this._windows ) {
+                if ( window.name == windowVO.name )
+                    return true;
+            }
         }
-        return true;
+        return false;
+    }
+
+    /**
+     * Действие открытия окна
+     * @param window 
+     */
+    protected windowOpenAction( window: IWindow ): Window {
+        window.open();
+        return window as Window;
+    }
+
+    /**
+     * Действие закрытия окна
+     * @param window 
+     */
+    protected windowCloseAction( window: IWindow ): Window {
+        window.close();
+        return window as Window;
     }
 
     /**
      * Потеря фокуса списком окон
      * @param windowsList 
      */
-    protected windowsFocusSet( windowsList: Window[], focus: boolean = false ) {
+    protected windowsFocusSet( windowsList: IWindow[], focus: boolean = false ) {
         for ( let window of windowsList ) {
             this.windowFocusSet( window, focus );
         }
@@ -338,7 +377,7 @@ export default class WindowService extends EventDispathcer implements IEnable, I
      * Потеря фокуса окном
      * @param window 
      */
-    protected windowFocusSet( window: Window, focus: boolean = false ) {
+    protected windowFocusSet( window: IWindow, focus: boolean = false ) {
         window.focus = focus;
     }
 
@@ -346,13 +385,22 @@ export default class WindowService extends EventDispathcer implements IEnable, I
      * Закрыть стак окон
      * @param windowsList 
      */
-    protected windowsClose( windowsList: Window[] ) {
+    protected windowsClose( windowsList: IWindow[] ) {
 
         // Закрытие окно сверху вниз
-        for ( let i = windowsList.length - 1; i > -1; i++ ) {
-            let window: Window = windowsList[ i ];
+        for ( let i = windowsList.length - 1; i > -1; i-- ) {
+            let window: IWindow = windowsList[ i ];
             this.windowClose( window );
         }
+    }
+
+    /**
+     * Возвращает класс окна по умолчанию. Если данное поле не изменить
+     * в качестве стандартного динамического окна будет использован класс
+     * Window
+     */
+    protected windowClassDefaultGet(): any {
+        return this.vo.class || Window;
     }
     
 }

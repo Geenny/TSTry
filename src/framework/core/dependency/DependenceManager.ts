@@ -13,10 +13,7 @@ export default class DependenceManager extends EventDispathcer implements IInit,
 
     protected started: boolean;             // Ручной запуск менеджера зависимостей
 
-    constructor( list: IDependency[] = null ) {
-        super();
-        this.initDependencyList( list );
-    }
+    constructor() { super(); }
 
     /**
      * INTERFACES
@@ -81,11 +78,10 @@ export default class DependenceManager extends EventDispathcer implements IInit,
     }
 
     /**
-     * Добавление @IDependency в список. Метод не вернет @IDependency если
-     * пере
+     * Добавление @IDependency
      * @param dependency 
      */
-    protected dependencyAdd( dependency: IDependency ): IDependency {
+    public dependencyAdd( dependency: IDependency ): IDependency {
         if ( !( dependency instanceof Dependency ) ) return null;
         if ( this.dependencyInList( dependency ) ) return dependency;
         this._list.push( dependency );
@@ -95,6 +91,15 @@ export default class DependenceManager extends EventDispathcer implements IInit,
         }
 
         return dependency;
+    }
+
+    /**
+     * Добавление зависимостей из списка
+     * @param dependencies 
+     */
+    public dependencyListAdd( dependencies: IDependency[] = [] ) {
+        for ( let dependency of dependencies )
+            this.dependencyAdd( dependency );
     }
 
     /**

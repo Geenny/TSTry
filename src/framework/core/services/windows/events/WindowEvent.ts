@@ -20,6 +20,11 @@ export default class WindowEvent extends Event {
     public static get FOCUS(): string { return "windowFocus"; }
     public static get UNFOCUS(): string { return "windowUnfocus"; }
 
+    // VIEW
+    public static get VIEW_CLEAR(): string { return "windowViewClear"; }
+    public static get VIEW_DRAW_START(): string { return "windowViewDrawStart"; }
+    public static get VIEW_DRAW_COMPLETE(): string { return "windowViewDrawComplete"; }
+    
 
     public window: IWindow;
     public windowService: WindowService;

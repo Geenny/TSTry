@@ -12,9 +12,21 @@ export default class Main extends Application {
         Log.log("Started: MAIN");
         this.addEventListener(ApplicationEvent.APPLICATION_KEYBOARD_KEYDOWN, (e) => {
             Log.log(e);
-            // if ( e.data.key == "q" ) {
-            //     aw.speed += 0.1;
-            // }
+            if (e.data.key == "q") {
+                windowService.windowOpen(new WindowVO({ action: 1 }));
+            }
+            if (e.data.key == "w") {
+                windowService.windowOpen(new WindowVO({ action: 2 }));
+            }
+            if (e.data.key == "e") {
+                windowService.windowOpen(new WindowVO({ action: 4 }));
+            }
+            if (e.data.key == "r") {
+                windowService.windowOpen(new WindowVO({ action: 64 }));
+            }
+            if (e.data.key == "t") {
+                windowService.windowOpen(new WindowVO({ action: 128 }));
+            }
             // if ( e.data.key == "a" ) {
             //     aw.speed -= 0.1;
             // }
@@ -73,9 +85,6 @@ export default class Main extends Application {
         // };
         let windowService = new WindowService(new WindowServiceVO());
         windowService.init();
-        windowService.windowOpen(new WindowVO());
-        windowService.windowOpen(new WindowVO());
-        windowService.windowOpen(new WindowVO());
     }
 }
 //# sourceMappingURL=Main.js.map

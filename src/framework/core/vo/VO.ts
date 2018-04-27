@@ -1,25 +1,26 @@
-import Window from '../Window';
-export default class WindowServiceVO implements IVO {
+export default class VO implements IVO {
 
-    public class = Window;
-    public sourceVOList: any = {}; // Список - объект с настройками WindowVO
-
-    public data: any = {};
+    // Данные из источника
+    public data: any = null;
 
     constructor( data: any = null ) {
         this.parse( data );
     }
 
+    /**
+     * Разбор данных @VO
+     * @param data 
+     */
     public parse( data: any ) {
 
         if ( !data ) data = {};
-        this.data = data;
+        Object.assign( this.data, data );
 
         for ( let key in data ) {
             if ( !this.hasOwnProperty( key ) ) continue;
             this[ key ] = data[ key ];
         }
-        
+
     }
 
 }

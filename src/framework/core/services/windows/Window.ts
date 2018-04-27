@@ -160,11 +160,19 @@ export default class Window extends EventDispathcer implements IWindow, IDestroy
     // DRAW
 
     protected draw() {
+        this.viewClear();
         this.viewDraw();
     }
 
-    protected viewDraw() { }
-    protected viewClear() { }
+    protected viewDraw() {
+        this.dispatchEvent( new WindowEvent( WindowEvent.VIEW_DRAW_START, this ) );
+    }
+    protected viewDrawComplete() {
+        this.dispatchEvent( new WindowEvent( WindowEvent.VIEW_DRAW_COMPLETE, this ) );
+    }
+    protected viewClear() {
+        this.dispatchEvent( new WindowEvent( WindowEvent.VIEW_CLEAR, this ) );
+    }
 
     // ANIMATION
 

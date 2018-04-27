@@ -4,6 +4,7 @@ import KeyboardController from '../core/controllers/keyboard/KeyboardController'
 import ResizeController from '../core/controllers/resize/ResizeController';
 import Controller from '../core/controllers/Controller';
 import Controllers from '../core/controllers/Controllers';
+import ApplicationEvent from './events/ApplicationEvent';
 
 export default class Application extends EventDispathcer implements IInit {
 
@@ -11,6 +12,7 @@ export default class Application extends EventDispathcer implements IInit {
 
     private _inited: boolean;
     private _started: boolean;
+    private _pause: boolean;
 
     private _container: HTMLElement;
 
@@ -40,6 +42,14 @@ export default class Application extends EventDispathcer implements IInit {
 
     public get container(): HTMLElement { return this._container; }
 
+    public get pause(): boolean { return this._pause; }
+    public set pause( value: boolean ) {
+        if ( this._pause == value ) return;
+        this._pause = value;
+        this.setPause();
+        this.dispatchEvent( new ApplicationEvent( ApplicationEvent.APPLICATION_PAUSE, null ) )
+    }
+
     // INIT
 
     public initContainer( container: HTMLElement ) {
@@ -49,11 +59,24 @@ export default class Application extends EventDispathcer implements IInit {
     public init() {
         this.modules = new Modules();
         this.controllers = new Controllers( this, this.controllerOptions );
+        this._inited = true;
     }
 
     //
     // MODULES
     // 
+
+    //
+    // TECH
+    //
+
+    /**
+     * Установка паузы
+     */
+    protected setPause() {
+        this.modules.enable = !this._pause;
+        this.controllers.enable = !this._pause;
+    }
 
 
 

@@ -1,3 +1,5 @@
+//import DependenceManager from '../DependenceManager';
+
 interface IDependency extends IInfo, IEnable, IInit, IState, IDestroy {
 
     /**

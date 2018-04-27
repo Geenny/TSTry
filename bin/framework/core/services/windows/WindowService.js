@@ -114,7 +114,7 @@ export default class WindowService extends EventDispathcer {
             return null;
         if (this.debug)
             Log.log(windowVO.name + " OPEN.");
-        if (!this.isUnique(windowVO))
+        if (this.isUnique(windowVO))
             return null;
         let window = new Window(windowVO);
         window.unique = this.windowCountUnique();
@@ -250,11 +250,13 @@ export default class WindowService extends EventDispathcer {
      * @param windowVO
      */
     isUnique(windowVO) {
-        for (let window of this._windows) {
-            if (window.name == windowVO.name)
-                return false;
+        if (this.windowActionCheck(windowVO.action, WindowAction.UNIQUE)) {
+            for (let window of this._windows) {
+                if (window.name == windowVO.name)
+                    return true;
+            }
         }
-        return true;
+        return false;
     }
     /**
      * Потеря фокуса списком окон
@@ -278,7 +280,7 @@ export default class WindowService extends EventDispathcer {
      */
     windowsClose(windowsList) {
         // Закрытие окно сверху вниз
-        for (let i = windowsList.length - 1; i > -1; i++) {
+        for (let i = windowsList.length - 1; i > -1; i--) {
             let window = windowsList[i];
             this.windowClose(window);
         }

@@ -4,7 +4,7 @@ import WindowService from '../WindowService';
 
 export default class WindowVO implements IVO {
 
-    public windowService: WindowService = null;
+    public windowService: WindowService = WindowService.service;
 
     public type: string = WindowType.DEFAULT;
     public priority: number = 0;

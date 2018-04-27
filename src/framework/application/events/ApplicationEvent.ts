@@ -21,6 +21,8 @@ export default class ApplicationEvent extends Event {
     public static get APPLICATION_DEVICE_ORIENTATION(): string { return "applicationDeviceOrientation"; }
     public static get APPLICATION_DEVICE_MOTION(): string { return "applicationDeviceMotion"; }
 
+    public static get APPLICATION_PAUSE(): string { return "applicationPause"; }
+
     public data: IVO;
 
     constructor( type: string, data: IVO ) {

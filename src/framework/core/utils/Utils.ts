@@ -30,12 +30,13 @@ export default class Utils {
      */
     public static bitmaskCheckKey( bitmask: number, bitkey: number ): boolean {
         if ( bitkey <= 0 ) return false;
-        while( true ) {
-            if ( bitkey == 1 ) break;
-            bitkey = bitkey >> 1;
-            bitmask = bitmask >> 1;
-        }
-        return ( bitmask & bitkey ) == 1;
+        // while( true ) {
+        //     if ( bitkey == 1 ) break;
+        //     bitkey = bitkey >> 1;
+        //     bitmask = bitmask >> 1;
+        // }
+        // return ( bitmask & bitkey ) == 1;
+        return ( bitmask & bitkey ) > 0;
     }
 
 }
