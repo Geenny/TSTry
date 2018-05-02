@@ -18,10 +18,15 @@ import DependenceManager from './framework/core/dependency/DependenceManager';
 import DependencyManagerEvent from './framework/core/dependency/events/DependencyManagerEvent';
 import Event from './framework/core/events/Event';
 import UserDependency from './user/UserDependency';
+import Launcher from './core/launcher/Launcher';
+import AudioManager from './core/audio/AudioManager';
+import CONFIG from './core/config/CONFIG';
 
 export default class Main extends Application {
 
     public static instance: Main;
+    public static launcher: Launcher;
+    public static windowService: WindowService;
 
     private _applicationDependencyList: IDependency[] = [];
     private _applicationDepndenceManager: ApplicationDependeneManager;
@@ -36,19 +41,19 @@ export default class Main extends Application {
             Log.log(e);
 
             if ( e.data.key == "q" ) {
-                windowService.windowOpen( new WindowVO( { action:1 } ) );
+                Main.windowService.windowOpen( new WindowVO( { action:1 } ) );
             }
             if ( e.data.key == "w" ) {
-                windowService.windowOpen( new WindowVO( { action:2 } ) );
+                Main.windowService.windowOpen( new WindowVO( { action:2 } ) );
             }
             if ( e.data.key == "e" ) {
-                windowService.windowOpen( new WindowVO( { action:4 } ) );
+                Main.windowService.windowOpen( new WindowVO( { action:4 } ) );
             }
             if ( e.data.key == "r" ) {
-                windowService.windowOpen( new WindowVO( { action:64 } ) );
+                Main.windowService.windowOpen( new WindowVO( { action:64 } ) );
             }
             if ( e.data.key == "t" ) {
-                windowService.windowOpen( new WindowVO( { action:128 } ) );
+                Main.windowService.windowOpen( new WindowVO( { action:128 } ) );
             }
             // if ( e.data.key == "a" ) {
             //     aw.speed -= 0.1;
@@ -115,9 +120,6 @@ export default class Main extends Application {
         //     Log.log( error["message"] );
         // };
 
-        let windowService: WindowService = new WindowService( new WindowServiceVO( ) );
-        windowService.init();
-
     }
 
     // GET/SET
@@ -132,8 +134,9 @@ export default class Main extends Application {
         super.init();
 
         this.initMain();
+        this.initComponents();
         this.initDependenceManager();
-        this.initDependencies();
+        //this.initDependencies();
     }
 
     //
@@ -162,6 +165,8 @@ export default class Main extends Application {
 
         let user: UserDependency = new UserDependency( 10, [] );
 
+        this._applicationDependencyList.push( user );
+
     }
 
     protected onApplicationManager( event: DependencyManagerEvent ) {
@@ -170,6 +175,27 @@ export default class Main extends Application {
 
     protected dependencyListGet(): IDependency[] {
         return this._applicationDependencyList;
+    }
+
+
+    //
+    // COMPONENTS
+    //
+
+    protected initComponents() {
+
+        let launcher: Launcher = new Launcher( this );
+        launcher.init();
+
+        let windowService: WindowService = new WindowService( CONFIG.window );
+        windowService.init();
+
+        let audioManager: AudioManager = new AudioManager( CONFIG.audio );
+        audioManager.init();
+
+        Main.launcher = launcher;
+        Main.windowService = windowService;
+
     }
 
 }

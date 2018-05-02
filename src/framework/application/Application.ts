@@ -8,7 +8,12 @@ import ApplicationEvent from './events/ApplicationEvent';
 
 export default class Application extends EventDispathcer implements IInit {
 
-    public static application: Application;
+    public static instance: Application;
+
+    public modules: Modules;
+    public controllers: Controllers;
+
+    protected controllerOptions: any = null;
 
     private _inited: boolean;
     private _started: boolean;
@@ -16,16 +21,11 @@ export default class Application extends EventDispathcer implements IInit {
 
     private _container: HTMLElement;
 
-    protected controllerOptions: any = null;
-
-    public modules: Modules;
-    public controllers: Controllers;
-
     constructor( container: HTMLElement ) {
 
         super();
 
-        Application.application = this;
+        Application.instance = this;
 
         this.initContainer( container );
 
