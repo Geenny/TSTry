@@ -91,10 +91,17 @@ export default class WindowService extends EventDispathcer {
         return window;
     }
     // WINDOWS HANDLERS
+    /**
+     * Стандартный общий обработчик всех событий @Window
+     * @param event
+     */
     onWindow(event) {
         this.dispatchEvent(new WindowEvent(event.type, event.window, this));
     }
     // DESTROY
+    /**
+     * Очистка данных и уничтожение надстроек функционала всех окон
+     */
     destroy() {
         while (this.length) {
             let window = this._windows.shift();
@@ -114,20 +121,25 @@ export default class WindowService extends EventDispathcer {
             return null;
         if (this.debug)
             Log.log(windowVO.name + " OPEN.");
-        if (this.isUnique(windowVO))
+        if (this.isUniqueWindowOpened(windowVO))
             return null;
-        let window = new Window(windowVO);
+        let Class = this.windowClassDefaultGet();
+        let window = new Class(windowVO);
         window.unique = this.windowCountUnique();
         this._windows.push(window);
         this.show(window);
         return window;
     }
+    /**
+     * Закрытие окна по параметру экземпляра окна
+     * @param window
+     */
     windowClose(window) {
         let index = this._windows.indexOf(window);
         if (index == -1)
             return;
         this._windows.splice(index, 1);
-        window.close();
+        this.windowCloseAction(window);
     }
     /**
      * Вернуть окно по его @ID
@@ -165,14 +177,16 @@ export default class WindowService extends EventDispathcer {
         }
         return unique;
     }
+    //
     // SHOW MANAGE
+    //
     /**
      * Отображение окна
      * @param window
      */
     show(window) {
         if (!window)
-            return;
+            return null;
         let windowsListForStack = [];
         let windowsListForClose = [];
         for (let i = 0; i < this.length; i++) {
@@ -192,9 +206,10 @@ export default class WindowService extends EventDispathcer {
         if (windowsListForStack.length == this.length - 1) {
             this.windowsClose(windowsListForClose);
             this.windowsFocusSet(windowsListForStack, false);
-            window.open();
+            this.windowOpenAction(window);
             window.focus = true;
         }
+        return window;
     }
     windowCheckCompareShowPossibility(windowForShow, windowForCompare) {
         // Для равный по условиям окон, проверяется только приоритет
@@ -249,7 +264,7 @@ export default class WindowService extends EventDispathcer {
      * Проверка @windowVO для сравнения типов
      * @param windowVO
      */
-    isUnique(windowVO) {
+    isUniqueWindowOpened(windowVO) {
         if (this.windowActionCheck(windowVO.action, WindowAction.UNIQUE)) {
             for (let window of this._windows) {
                 if (window.name == windowVO.name)
@@ -257,6 +272,22 @@ export default class WindowService extends EventDispathcer {
             }
         }
         return false;
+    }
+    /**
+     * Действие открытия окна
+     * @param window
+     */
+    windowOpenAction(window) {
+        window.open();
+        return window;
+    }
+    /**
+     * Действие закрытия окна
+     * @param window
+     */
+    windowCloseAction(window) {
+        window.close();
+        return window;
     }
     /**
      * Потеря фокуса списком окон
@@ -284,6 +315,14 @@ export default class WindowService extends EventDispathcer {
             let window = windowsList[i];
             this.windowClose(window);
         }
+    }
+    /**
+     * Возвращает класс окна по умолчанию. Если данное поле не изменить
+     * в качестве стандартного динамического окна будет использован класс
+     * Window
+     */
+    windowClassDefaultGet() {
+        return this.vo.class || Window;
     }
 }
 //# sourceMappingURL=WindowService.js.map

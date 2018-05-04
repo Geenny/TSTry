@@ -19,7 +19,7 @@ export default class Modules extends EventDispathcer {
     set enable(value) { this._enable = value; }
     // DEPENDENCIES
     initDependencyManager() {
-        this.manager = new DependenceManager(this.getModules());
+        this.manager = new DependenceManager();
         this.addEventListener(DependencyManagerEvent.DEPENDENCY_CHANGE, this.onModuleChange);
         this.addEventListener(DependencyManagerEvent.DEPENDENCY_COMPLETE, this.onModuleComplete);
         this.addEventListener(DependencyManagerEvent.DEPENDENCY_DESTROY, this.onModuleDestroy);
@@ -27,6 +27,7 @@ export default class Modules extends EventDispathcer {
         this.addEventListener(DependencyManagerEvent.INIT, this.onModulesInit);
         this.addEventListener(DependencyManagerEvent.COMPLETE, this.onModulesComplete);
         this.manager.init();
+        this.manager.dependencyListAdd(this.getModules());
     }
     onModuleChange(event) {
         this.dispatchEvent(new ModuleEvent(ModuleEvent.CHANGE, event.dependency));

@@ -7,6 +7,7 @@ export default class Launcher extends EventDispathcer implements IState, IInit, 
     private _inited: boolean;
     private _enable: boolean;
     private _state: number | string;
+    private _application: Application;
 
     constructor( application: Application ) {
         super();
@@ -22,14 +23,17 @@ export default class Launcher extends EventDispathcer implements IState, IInit, 
     public get enable(): boolean { return this._enable; }
     public set enable( value: boolean ) { this._enable = value; }
 
-    // 
+    public get application(): Application { return this._application; }
+    public set application( value: Application ) { this._application = value; }
+
+    // Init
 
     public init() {
         this._inited = true;
         this.dispatchEvent( new LauncherEvent( LauncherEvent.INIT, this ) );
     }
 
-    // 
+    // Destroy
 
     public destroy() { }
 

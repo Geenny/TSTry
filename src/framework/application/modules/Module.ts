@@ -1,13 +1,12 @@
 import Dependency from '../../core/dependency/Dependency';
-import DependenceManager from '../../core/dependency/DependenceManager';
 
 export default class Module extends Dependency implements IInfo {
 
     protected options: any = {};
 
-    constructor( manager: DependenceManager, dependencies: number[] = [] ) {
+    constructor( ID: number, dependencies: number[] = [] ) {
 
-        super( manager, dependencies );
+        super( ID, dependencies );
 
     }
 

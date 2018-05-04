@@ -124,10 +124,18 @@ export default class Window extends EventDispathcer {
     }
     // DRAW
     draw() {
+        this.viewClear();
         this.viewDraw();
     }
-    viewDraw() { }
-    viewClear() { }
+    viewDraw() {
+        this.dispatchEvent(new WindowEvent(WindowEvent.VIEW_DRAW_START, this));
+    }
+    viewDrawComplete() {
+        this.dispatchEvent(new WindowEvent(WindowEvent.VIEW_DRAW_COMPLETE, this));
+    }
+    viewClear() {
+        this.dispatchEvent(new WindowEvent(WindowEvent.VIEW_CLEAR, this));
+    }
     // ANIMATION
     /**
      * Анимация отображения @Window

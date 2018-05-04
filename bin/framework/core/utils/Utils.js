@@ -29,13 +29,13 @@ export default class Utils {
     static bitmaskCheckKey(bitmask, bitkey) {
         if (bitkey <= 0)
             return false;
-        while (true) {
-            if (bitkey == 1)
-                break;
-            bitkey = bitkey >> 1;
-            bitmask = bitmask >> 1;
-        }
-        return (bitmask & bitkey) == 1;
+        // while( true ) {
+        //     if ( bitkey == 1 ) break;
+        //     bitkey = bitkey >> 1;
+        //     bitmask = bitmask >> 1;
+        // }
+        // return ( bitmask & bitkey ) == 1;
+        return (bitmask & bitkey) > 0;
     }
 }
 //# sourceMappingURL=Utils.js.map

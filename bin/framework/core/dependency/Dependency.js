@@ -2,10 +2,10 @@ import EventDispathcer from '../events/EventDispathcer';
 import DependencyEvent from './events/DependencyEvent';
 import { DependenyState } from './states/DependencyState';
 export default class Dependency extends EventDispathcer {
-    constructor(manager, dependencies = []) {
+    constructor(ID, dependencies = []) {
         super();
         this._list = [];
-        this._manager = manager;
+        this._ID = ID;
         this._list = dependencies;
     }
     //
@@ -25,6 +25,7 @@ export default class Dependency extends EventDispathcer {
     get process() { return this._process; } // Процесс инициализации
     get errorMessage() { return this._errorMessage; }
     get manager() { return this._manager; }
+    set manager(value) { this._manager = value; }
     // 
     init() {
         this.dispatchEvent(new DependencyEvent(DependencyEvent.INIT, this));

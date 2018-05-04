@@ -32,7 +32,7 @@ export default class Modules extends EventDispathcer implements IEnable, IDestro
     // DEPENDENCIES
 
     private initDependencyManager() {
-        this.manager = new DependenceManager( this.getModules() );
+        this.manager = new DependenceManager();
         this.addEventListener( DependencyManagerEvent.DEPENDENCY_CHANGE, this.onModuleChange );
         this.addEventListener( DependencyManagerEvent.DEPENDENCY_COMPLETE, this.onModuleComplete );
         this.addEventListener( DependencyManagerEvent.DEPENDENCY_DESTROY, this.onModuleDestroy );
@@ -40,6 +40,7 @@ export default class Modules extends EventDispathcer implements IEnable, IDestro
         this.addEventListener( DependencyManagerEvent.INIT, this.onModulesInit );
         this.addEventListener( DependencyManagerEvent.COMPLETE, this.onModulesComplete );
         this.manager.init();
+        this.manager.dependencyListAdd(  this.getModules() );
     }
 
     protected onModuleChange( event: DependencyManagerEvent ) {

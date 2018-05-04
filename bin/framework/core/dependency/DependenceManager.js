@@ -3,12 +3,11 @@ import DependencyEvent from './events/DependencyEvent';
 import DependencyManagerEvent from "./events/DependencyManagerEvent";
 import Dependency from './Dependency';
 export default class DependenceManager extends EventDispathcer {
-    constructor(list = null) {
+    constructor() {
         super();
         this._listOfListeners = [];
         this._changeDependencyList = [];
         this._list = [];
-        this.initDependencyList(list);
     }
     /**
      * INTERFACES
@@ -61,8 +60,7 @@ export default class DependenceManager extends EventDispathcer {
         dependency = null;
     }
     /**
-     * Добавление @IDependency в список. Метод не вернет @IDependency если
-     * пере
+     * Добавление @IDependency
      * @param dependency
      */
     dependencyAdd(dependency) {
@@ -75,6 +73,14 @@ export default class DependenceManager extends EventDispathcer {
             this.dependenceChange(dependency);
         }
         return dependency;
+    }
+    /**
+     * Добавление зависимостей из списка
+     * @param dependencies
+     */
+    dependencyListAdd(dependencies = []) {
+        for (let dependency of dependencies)
+            this.dependencyAdd(dependency);
     }
     /**
      * Удаление зависимости из списка. Метод не вернет @IDependency если

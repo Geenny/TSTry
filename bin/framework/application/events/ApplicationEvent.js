@@ -12,6 +12,7 @@ export default class ApplicationEvent extends Event {
     static get APPLICATION_DEVICE_ORIENTATION_CHANGE() { return "applicationDeviceOrientationChange"; }
     static get APPLICATION_DEVICE_ORIENTATION() { return "applicationDeviceOrientation"; }
     static get APPLICATION_DEVICE_MOTION() { return "applicationDeviceMotion"; }
+    static get APPLICATION_PAUSE() { return "applicationPause"; }
     constructor(type, data) {
         super(type, false, false);
         this.data = data;

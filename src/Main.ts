@@ -21,12 +21,15 @@ import UserDependency from './user/UserDependency';
 import Launcher from './core/launcher/Launcher';
 import AudioManager from './core/audio/AudioManager';
 import CONFIG from './core/config/CONFIG';
+import Net from './core/net/Net';
+import RequestVO from './core/net/vo/RequestVO';
 
 export default class Main extends Application {
 
     public static instance: Main;
     public static launcher: Launcher;
     public static windowService: WindowService;
+    public static audioManager: AudioManager;
 
     private _applicationDependencyList: IDependency[] = [];
     private _applicationDepndenceManager: ApplicationDependeneManager;
@@ -120,6 +123,8 @@ export default class Main extends Application {
         //     Log.log( error["message"] );
         // };
 
+        Net.send( new RequestVO( { server: "google.com", data: "hi" } ) );
+
     }
 
     // GET/SET
@@ -195,6 +200,7 @@ export default class Main extends Application {
 
         Main.launcher = launcher;
         Main.windowService = windowService;
+        Main.audioManager = audioManager;
 
     }
 

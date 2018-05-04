@@ -1,7 +1,7 @@
 export default class VO implements IVO {
 
     // Данные из источника
-    public data: any = null;
+    public data: any = {};
 
     constructor( data: any = null ) {
         this.parse( data );

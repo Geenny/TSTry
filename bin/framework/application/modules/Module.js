@@ -1,7 +1,7 @@
 import Dependency from '../../core/dependency/Dependency';
 export default class Module extends Dependency {
-    constructor(manager, dependencies = []) {
-        super(manager, dependencies);
+    constructor(ID, dependencies = []) {
+        super(ID, dependencies);
         this.options = {};
     }
 }
