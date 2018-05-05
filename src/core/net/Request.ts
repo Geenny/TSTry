@@ -2,15 +2,18 @@ import { RequestState } from "./state/RequestState";
 import RequestVO from "./vo/RequestVO";
 import HTTPRequest from './HTTPRequest';
 import URL from "../../framework/core/utils/URL";
+import EventDispathcer from '../../framework/core/events/EventDispathcer';
 
-export default class Request implements IState {
+export default class Request extends EventDispathcer implements IState, IDestroy, IInit {
 
+    private _inited: boolean;
     private _state: number | string;
     private _vo: RequestVO;
 
     private _httpRequest: HTTPRequest;
 
     constructor( requestVO: RequestVO ) {
+        super();
         this.initVO( requestVO );
         this.init();
     }
@@ -20,7 +23,10 @@ export default class Request implements IState {
     public get state(): number | string { return this._state; }
     public set state( value: number | string ) { this._state = value; }
 
-    protected get vo(): RequestVO { return this._vo; }
+    public get inited(): boolean { return this._inited; }
+    public set inited( value: boolean ) { this._inited = value; }
+
+    public get vo(): RequestVO { return this._vo; }
     
     public get httpRequest(): HTTPRequest { return this._httpRequest; }
     public set httpRequest( value: HTTPRequest ) { this._httpRequest = value; }
@@ -43,7 +49,7 @@ export default class Request implements IState {
 
     // RequestVO
 
-    protected init() {
+    public init() {
         this.updateURL();
     }
 
@@ -54,6 +60,12 @@ export default class Request implements IState {
 
     protected updateURL() {
         this.url = URL.compare( this.secure, this.server, this.resource );
+    }
+
+    // Destroy
+
+    public destroy() {
+        
     }
 
 }

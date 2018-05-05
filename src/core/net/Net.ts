@@ -41,8 +41,8 @@ export default class Net extends EventDispathcer implements IInit, IEnable, ISta
 
     constructor( netVO: NetVO = null ) {
         super();
-        this.initVO( netVO );
         this.initInstance();
+        this.initVO( netVO );
     }
 
     // GET/SET
@@ -72,6 +72,7 @@ export default class Net extends EventDispathcer implements IInit, IEnable, ISta
     // Init
 
     public init() {
+        this.senderInit();
         this._inited = true;
         this._enable = true;
         this.dispatchEvent( new NetEvent( NetEvent.INIT, this ) );

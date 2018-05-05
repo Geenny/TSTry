@@ -1,5 +1,5 @@
 
-export default class HTTPRequestHeaders {
+export default class HTTPRequestHeader {
 
     public key: string;
     public value: string;

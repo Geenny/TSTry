@@ -6,17 +6,19 @@ import HTTPRequestHeaders from '../HTTPRequestHeaders';
 
 export default class NetVO extends VO {
 
-    public retry: number = 5;
+    // public retry: number = 5;
     
-    public secures: string[];
-    public servers: string[];
+    // public secures: string[];
+    // public servers: string[];
 
-    public secure: string = RequestSecureState.HTTP;
-    public server: string = "google.com";
-    public method: string = RequestMethodState.GET;
-    public headers: HTTPRequestHeaders[] = [];
+    // public secure: string = RequestSecureState.HTTP;
+    // public server: string = "google.com";
+    // public method: string = RequestMethodState.GET;
+    // public headers: HTTPRequestHeaders[] = [];
 
-    public sendCount: number = 5;
+    public maxSendCount: number = 5;
+
+    public sendersOption: SenderOption[] = [];
 
     constructor( data: any = {} ) {
         super( data );
