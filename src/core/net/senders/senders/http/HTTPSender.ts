@@ -3,44 +3,32 @@ import Request from '../../../Request';
 import HTTPRequest from '../../../HTTPRequest';
 import RequestEvent from '../../../events/RequestEvent';
 import Log from '../../../../../framework/core/utils/Log';
-import HTTPRequestHeaders from '../../../HTTPRequestHeaders';
 import { SenderConvertConst } from '../../states/SenderConvertConst';
 import { RequestState } from '../../../state/RequestState';
 import HTTPRequestHeader from '../../../HTTPRequestHeader';
+import Sender from '../Sender';
+import HTTPSenderVO from './vo/HTTPSenderVO';
 
-export default class HTTPSender extends EventDispathcer implements ISender, IInit {
+export default class HTTPSender extends Sender {
 
-    private _serverOptions: ServerOptions = new ServerOptions();
+    //private _serverOptions: ServerOptions = new ServerOptions();
 
-    private _inited: boolean;
     private _connected: boolean;
-    private _requests: Request[] = [];
     private _structs: HTTPStruct[] = [];
-    private _ID: number = 0;
-    private _main: boolean;
     private _method: string;
     private _url: string;
-    private _vo: SenderVO;
 
-    constructor( senderVO: SenderVO ) {
-        super();
-        this.initVO( serverVO );
+    constructor( senderVO: HTTPSenderVO ) {
+        super( senderVO );
     }
 
     // GET/SET
 
-    public get ID(): number { return this._ID; }
-    public get main(): boolean { return this._main; }
-    public set main( value: boolean )  { this._main = value; }
+    public get headers(): HTTPRequestHeader[] { return this.currentVO.headers; }
+    public get method(): string { return this.currentVO.method; }
+    public get url(): string { return this.currentVO.url; }
 
-    public get headers(): HTTPRequestHeader[] { return this.vo.headers; }
-    public get method(): string { return this.vo.method; }
-    public get url(): string { return this.vo.url; }
-    
-    public get inited(): boolean { return this._inited; }
-    public set inited( value: boolean ) { this._inited = value; }
-
-    public get vo(): SenderVO { return this._vo; }
+    public get currentVO(): HTTPSenderVO { return this.vo as HTTPSenderVO; }
 
     // Interface
 
@@ -65,12 +53,12 @@ export default class HTTPSender extends EventDispathcer implements ISender, IIni
     // INIT
 
     public init() {
-        this._inited = true;
+        this.inited = true;
         this.dispatchEvent( new RequestEvent( RequestEvent.INIT ) );
     }
 
-    protected initVO( senderVO: SenderVO ) {
-        if ( !senderVO ) senderVO = new SenderVO();
+    protected initVO( senderVO: HTTPSenderVO ) {
+        if ( !senderVO ) senderVO = new HTTPSenderVO();
         this._vo = senderVO;
     }
 
@@ -90,7 +78,7 @@ export default class HTTPSender extends EventDispathcer implements ISender, IIni
 
         if ( !data ) return "null";
         if ( typeof data == "object" ) {
-            if ( this.vo.convertSendData == SenderConvertConst.JSON )
+            if ( this.currentVO.convertSendData == SenderConvertConst.JSON )
                 return JSON.stringify( data );
         }
 

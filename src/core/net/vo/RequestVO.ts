@@ -2,7 +2,7 @@
 import VO from '../../../framework/core/vo/VO';
 import URL from '../../../framework/core/utils/URL';
 import { RequestSecureState } from '../state/RequestSecureState';
-import HTTPRequestHeaders from '../HTTPRequestHeaders';
+import HTTPRequestHeader from '../HTTPRequestHeader';
 
 export default class RequestVO extends VO {
 
@@ -14,7 +14,7 @@ export default class RequestVO extends VO {
     public server: string;
     public resource: string;
     public method: string;
-    public headers: HTTPRequestHeaders[] = [];
+    public headers: HTTPRequestHeader[] = [];
     public data: string;
 
     public status: number = 0;
@@ -23,6 +23,8 @@ export default class RequestVO extends VO {
     public onComplete: Function;
     public onProgress: Function;
     public onError: Function;
+
+    public senderID: number = 0;
 
     constructor( data: any = {} ) {
         super( data );

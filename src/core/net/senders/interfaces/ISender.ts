@@ -1,7 +1,15 @@
 
-import Request from '../../Request';
-
 interface ISender {
+
+    /**
+     * ID :)
+     */
+    ID: number;
+
+    /**
+     * 
+     */
+    main: boolean;
 
     /**
      * 
@@ -16,20 +24,20 @@ interface ISender {
     /**
      * Список @Request на обслуживании
      */
-    requests: Request[];
+    requests: any[];
 
     /**
      * Отправка данных через данный интерфейс рассылки
      * @param data 
      */
-    send( data: any ): Request;
+    send( data: any ): any;
 
 
     /**
      * Отмена и уничтожение @Request 
      * @param request 
      */
-    cancel( request: Request ): boolean;
+    cancel( request: any ): boolean;
     
     /**
      * Отмена и уничтожение всех @Request 

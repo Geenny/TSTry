@@ -39,4 +39,20 @@ export default class Utils {
         return ( bitmask & bitkey ) > 0;
     }
 
+
+    /**
+     * Выдача очередного номера из IID[] списка
+     * @param list 
+     * @param start 
+     */
+    public static getNextID( list: any[], start: number = 1 ): number {
+        let result: number = start;
+        for( let i = 0; list && i < list.length; i++ ) {
+            let object: any = list[ i ];
+            if ( !object || !object.hasOwnProperty( "ID" ) ) continue;
+            if ( object.ID >= result ) result = object.ID + 1;
+        }
+        return result;
+    }
+
 }

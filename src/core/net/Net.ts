@@ -6,6 +6,11 @@ import { RequestState } from './state/RequestState';
 import HTTPRequest from './HTTPRequest';
 import Log from '../../framework/core/utils/Log';
 import NetVO from './vo/NetVO';
+import Utils from '../../framework/core/utils/Utils';
+import Event from '../../framework/core/events/Event';
+import RequestEvent from './events/RequestEvent';
+import Sender from './senders/senders/Sender';
+import SenderVO from './senders/senders/vo/SenderVO';
 
 export default class Net extends EventDispathcer implements IInit, IEnable, IState {
 
@@ -35,7 +40,8 @@ export default class Net extends EventDispathcer implements IInit, IEnable, ISta
     private _enable: boolean;
     private _state: number | string;
     private _requests: Request[] = [];
-    private _sends: Request[] = [];
+    //private _sends: Request[] = [];
+    private _senders: ISender[] = [];
 
     private _vo: NetVO;
 
@@ -57,22 +63,10 @@ export default class Net extends EventDispathcer implements IInit, IEnable, ISta
 
     public get vo(): NetVO { return this._vo; }
 
-    public get length(): number { return this._requests.length; }
-
-    public get sendCount(): number { return this.vo.sendCount; }
-    public get sendLength(): number { return this._sends.length; }
-    public get sendCan(): boolean { return this.sendLength < this.sendCount && this.sendIsNotSended; }
-    public get sendIsNotSended(): boolean {
-        for ( let request of this._requests ) {
-            if ( request.state == RequestState.NONE || request.state == RequestState.WAIT ) return true;
-        }
-        return false;
-    }
-
     // Init
 
     public init() {
-        this.senderInit();
+        this.sendersInit();
         this._inited = true;
         this._enable = true;
         this.dispatchEvent( new NetEvent( NetEvent.INIT, this ) );
@@ -99,114 +93,129 @@ export default class Net extends EventDispathcer implements IInit, IEnable, ISta
         if ( !this.enable ) return null;
 
         let request: Request = this.createRequest( requestVO );
-        request.state = RequestState.WAIT;
 
-        this.next();
+        if ( this.senderSend( request ) ) return request;
 
-        return request;
+        return null;
     }
 
     //
     
     protected createRequest( requestVO: RequestVO ): Request {
-        let request: Request = new Request( this.requestVOSet( requestVO ) );
-        this._requests.push( request );
-
+        let request: Request = new Request( requestVO );
         return request;
     }
+    
+    protected senderSend( request: Request ): boolean {
 
-    protected next() {
+        let sender: ISender = this.senderGetByRequest( request );
+        if ( !sender ) return false;
 
-        if ( !this.enable ) return;
+        sender.send( request );
 
-        while( this.sendCan )
-            this.sendNextProcess();
-        
     }
 
-    protected getNext(): Request {
-        for ( let i = 0; i < this.length; i++ ) {
-            let request: Request = this._requests[ i ];
-            if ( request.state != RequestState.NONE && request.state != RequestState.WAIT ) continue;
-            return request;
+    /**
+     * Вернуть ISender по RequestVO.senderID или ISender main которого равен true
+     * @param request 
+     */
+    protected senderGetByRequest( request: Request ): ISender {
+
+        let senderID: number = request.vo.senderID;
+        let main: ISender;
+
+        for ( let i = 0; i < this._senders.length; i++ ) {
+            let sender: ISender = this._senders[ i ];
+            if ( sender.main )
+                main = sender;
+            if ( senderID > 0 && senderID == sender.ID )
+                return sender;
+        }
+
+        return null;
+
+    }
+
+    
+
+
+
+
+    //
+    // SENDERS
+    //
+
+    protected sendersInit() {
+
+        for ( let options in this._vo.sendersOption ) {
+            if ( !options ) continue;
+            let ClassName: any = options.class;
+            let sender: Sender = new ClassName( new SenderVO( options.senderData ) );
+            this.senderAdd( sender );
+        }
+
+    }
+
+
+    //
+    // Sender
+    //
+
+
+    /**
+     * Добавить ISender
+     * @param sender 
+     */
+    public senderAdd( sender: ISender, init: boolean = true ): ISender {
+        if ( !sender ) return null;
+        if ( this.senderInNet( sender ) ) return sender;
+
+        sender.ID = Utils.getNextID( this._senders );
+        this._senders.push( sender );
+
+        if ( !init ) return;
+        this.senderInit( sender as Sender );
+    }
+
+    /**
+     * Удалить ISender
+     * @param sender 
+     */
+    public senderRemove( sender: ISender ): ISender {
+        let index: number = this.senderIndexGet( sender );
+        if ( index == -1 ) return null;
+
+        this._senders.splice( index, 1 );
+
+        return sender;
+    }
+
+    public senderGetByID( ID: number ): ISender {
+        for ( let i = 0; i < this._senders.length; i++ ) {
+            let sender: ISender = this._senders[ i ];
+            if ( sender.ID == ID ) return sender;
         }
         return null;
     }
 
-    private sendNextProcess(): Request {
-
-        let request: Request = this.getNext();
-        if ( !request ) return null;
-
-        return this.requestSend( request );
-
+    protected senderInNet( sender: ISender ): boolean {
+        return this.senderIndexGet( sender ) >= 0;
     }
 
-    private requestSend( request: Request ): Request {
-
-        let xhttp: HTTPRequest = this.xmlHttpRequestInstanceGet();
-        xhttp.addEventListener( "readystatechange", this.onStatus );
-        xhttp.addEventListener( "loadstart", this.onOpen );
-        xhttp.addEventListener( "load", this.onLoad );
-        xhttp.addEventListener( "progress", this.onProgress );
-        xhttp.addEventListener( "error", this.onError );
-        xhttp.addEventListener( "abort", this.onAbort );
-        xhttp.request = request;
-
-        request.httpRequest = xhttp;
-        request.state = RequestState.PROCESS;
-        this._sends.push( request );
-
-        xhttp.open( request.method, request.url, true );
-        xhttp.send( request.data );
-
-        return request;
-
+    protected senderIndexGet( sender: ISender ): number {
+        return this._senders.indexOf( sender );
     }
 
-    private requestVOSet( requestVO: RequestVO ): RequestVO {
-
-        requestVO.secure = requestVO.secure || this.vo.secure;
-        requestVO.server = requestVO.server || this.vo.server;
-        requestVO.method = requestVO.method || this.vo.method;
-        requestVO.headers = requestVO.headers || this.vo.headers;
-        requestVO.retry = requestVO.retry || this.vo.retry;
-
-        return requestVO;
-
-    }
-
-    private onStatus( event: any ) {
-        Log.log( event );
-    }
-    private onOpen( event: any ) {
-        Log.log( event );
-    }
-    private onLoad( event: any ) {
-        Log.log( event );
-    }
-    private onProgress( event: any ) {
-        Log.log( event );
-    }
-    private onError( event: any ) {
-        Log.log( event );
-    }
-    private onAbort( event: any ) {
-        Log.log( event );
-    }
-
-    /**
-     * XMLHttpRequest
-     */
-    private xmlHttpRequestInstanceGet(): HTTPRequest {
-
-        // code for modern browsers
-        //if ( window[ "XMLHttpRequest" ] ) return new XMLHttpRequest();
+    protected senderInit( sender: Sender ) {
+        if ( !sender ) return;
+        if ( sender.hasEventListener( Event.ANY ) ) return;
         
-        // code for old IE browsers
-        //return new ActiveXObject("Microsoft.XMLHTTP");
+        sender.addEventListener( Event.ANY, this.onSender );
+        sender.init();
+    }
 
-        return new HTTPRequest();
+    protected onSender( event: RequestEvent ) {
+
     }
 
 }

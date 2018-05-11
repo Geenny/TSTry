@@ -2,7 +2,6 @@
 import VO from '../../../framework/core/vo/VO';
 import { RequestSecureState } from '../state/RequestSecureState';
 import { RequestMethodState } from '../state/RequestMethodState';
-import HTTPRequestHeaders from '../HTTPRequestHeaders';
 
 export default class NetVO extends VO {
 
@@ -18,7 +17,7 @@ export default class NetVO extends VO {
 
     public maxSendCount: number = 5;
 
-    public sendersOption: SenderOption[] = [];
+    public sendersOption: any[] = [];
 
     constructor( data: any = {} ) {
         super( data );
